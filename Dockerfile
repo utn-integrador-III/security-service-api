@@ -1,6 +1,6 @@
 FROM python:3-alpine3.15
-WORKDIR /app
-COPY . /app
-RUN pip install -r requirements.txt
-EXPOSE 3000
-CMD python ./app.py
+WORKDIR /usr/src/app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
+CMD /usr/local/bin/gunicorn --reload --log-level 'debug' -t 3600 -b :$SECURITY_SERVICE_PORT run_server:App
