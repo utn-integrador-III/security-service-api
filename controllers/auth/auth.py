@@ -1,5 +1,6 @@
 from flask_restful import Resource, reqparse
 from models.auth.auth import UserModel
+from utils.server_response import StatusCode, ServerResponse
 
 class AuthController(Resource):
     route = '/login'
@@ -16,18 +17,18 @@ class AuthController(Resource):
         # Validar dominios de correo electrónico permitidos
         allowed_domains = ["@utn.ac.cr", "@est.utn.ac.cr"]
         if not any(email.endswith(domain) for domain in allowed_domains):
-            return {"message": "Invalid email domain", "message_code": "INVALID_EMAIL_DOMAIN"}, 400
+            return ServerResponse(message="Invalid email domain", message_code="INVALID_EMAIL_DOMAIN", status=StatusCode.BAD_REQUEST)
 
         user = UserModel.find_by_email(email)
 
         if not user:
-            return {"message": "Invalid email or password", "message_code": "INVALID_CREDENTIALS"}, 400
+            return ServerResponse(message="Invalid email or password", message_code="INVALID_CREDENTIALS", status=StatusCode.BAD_REQUEST)
 
         if not UserModel.verify_password(password, user['password']):
-            return {"message": "Invalid email or password", "message_code": "INVALID_CREDENTIALS"}, 400
+            return ServerResponse(message="Invalid email or password", message_code="INVALID_CREDENTIALS", status=StatusCode.BAD_REQUEST)
 
         if user['status'] != "Active":
-            return {"message": "User is not active", "message_code": "USER_NOT_ACTIVE"}, 400
+            return ServerResponse(message="User is not active", message_code="USER_NOT_ACTIVE", status=StatusCode.BAD_REQUEST)
 
         return {
             'data': {
@@ -39,4 +40,4 @@ class AuthController(Resource):
             },
             'message': "User has been authenticated",
             'message_code': "USER_AUTHENTICATED"
-        }, 200
+        }, StatusCode.OK
