@@ -40,4 +40,4 @@ class AuthController(Resource):
             },
             'message': "User has been authenticated",
             'message_code': "USER_AUTHENTICATED"
-        }, StatusCode.OK
+        }, StatusCode.CREATED

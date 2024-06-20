@@ -1,5 +1,8 @@
-from models.auth.db_queries import find_user_by_email
+from models.auth.db_queries import __dbmanager__
 
+def find_user_by_email(email):
+    user = __dbmanager__.collection.find_one({"email": email})
+    return user
 class UserModel:
 
     @staticmethod
