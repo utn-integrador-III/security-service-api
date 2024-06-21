@@ -12,6 +12,7 @@ class StatusCode():
     UNPROCESSABLE_ENTITY = 422
     INTERNAL_SERVER_ERROR = 500
     TIMEOUT = 503
+    BAD_REQUEST = 400
     
 class ServerResponse(object):   
     """Handle server responses
