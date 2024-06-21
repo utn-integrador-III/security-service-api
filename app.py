@@ -14,7 +14,6 @@ if config('SECURITY_API_ENVIRONMENT') == 'Development':
 
 addServiceLayer(api)
 
-# Ruta del POST para el registro de usuario
 @app.route('/register', methods=['POST'])
 def register_user():
     return UserController.register()
