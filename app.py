@@ -3,7 +3,7 @@ from flask_restful import Api
 from flask_cors import CORS
 from decouple import config
 from service import addServiceLayer
-from controllers.health.user_controller import UserController
+from controllers.user.user_controller import UserController
 
 app = Flask(__name__)
 app.debug = config('FLASK_DEBUG', cast=bool)
