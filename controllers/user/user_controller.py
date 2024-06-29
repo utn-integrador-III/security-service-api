@@ -69,26 +69,33 @@ class UserController(Resource):
                     status=StatusCode.CONFLICT
                 )
             
-            # Crear nuevo usuario
-            verification_code = ''.join(random.choices(string.digits, k=4))
-            expiration_time = datetime.utcnow() + timedelta(minutes=5)
-            
-            user_data = {
-                'name': name,
-                'password': password,
-                'email': email,
-                'status': 'Pending',
-                'verification_code': verification_code,
-                'expiration_time': expiration_time.isoformat()
-            }
-            
-            new_user = UserModel.create_user(user_data)
-            
-            return ServerResponse(
-                message="User successfully created",
-                message_code=USER_SUCCESSFULLY_CREATED,
-                status=StatusCode.OK
-            )
+            try:
+                # Crear nuevo usuario
+                verification_code = ''.join(random.choices(string.digits, k=4))
+                expiration_time = datetime.utcnow() + timedelta(minutes=5)
+                
+                user_data = {
+                    'name': name,
+                    'password': password,
+                    'email': email,
+                    'status': 'Pending',
+                    'verification_code': verification_code,
+                    'expiration_time': expiration_time.isoformat()
+                }
+                
+                new_user = UserModel.create_user(user_data)
+                
+                return ServerResponse(
+                    message="User successfully created",
+                    message_code=USER_SUCCESSFULLY_CREATED,
+                    status=StatusCode.OK
+                )
+            except Exception as e:
+                logger.error(f"Error creating user: {str(e)}", exc_info=True)
+                return ServerResponse(
+                    message="Error creating user",
+                    status=StatusCode.INTERNAL_SERVER_ERROR
+                )
         
         except Exception as e:
             logger.error(f"An unexpected error occurred: {str(e)}", exc_info=True)
