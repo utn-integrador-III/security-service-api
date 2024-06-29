@@ -1,0 +1,145 @@
+#This is the header of the file, whose main goal is to display important information
+#about the .yml file.
+swagger: "2.0"
+info:
+  description: "Security Service API's Documentation"
+  version: "1.0.0"
+  title: "Swagger Security Service API"
+  termsOfService: "Terms"
+  contact:
+    email: "ebarahona@utn.ac.cr"
+host: "localhost:5002"
+basePath: "/booking_api"
+#The tags are the identifiers for the paths that are created, this will assign a path with a unique tag,
+#meaning that, an specific end-point belongs to a tag or identifier
+tags:
+  - name: "Auth"
+    description: "Auth paths"
+#the schemes will define the protocol that are been used by the end-points inside the API
+schemes:
+  - "https"
+  - "http"
+#The definitions will display the information that the end-points will return, all along with the
+#corresponding messages of the errors.
+definitions:
+  role_idResponse:
+    type: object
+    properties:
+      roles:
+        type: string
+        example: "member"
+  Response:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions"
+      message:
+        type: string
+        example: "Successfully requested"
+      message_code:
+        type: string
+        example: "OK_MSG"
+  ErrorResponse:
+    type: object
+    properties:
+      data:
+        type: string
+        example: null
+      message:
+        type: string
+      message_code:
+        type: string
+  InternalErrorResponse:
+    type: object
+    properties:
+      data:
+        type: string
+        example: null
+      message:
+        type: string
+        example: "Internal server error"
+      message_code:
+        type: string
+        example: "INTERNAL_SERVER_ERROR_MSG"
+  AuthGet:
+    type: object
+    properties:
+      email:
+        type: string
+        example: "semataoe@est.utn.ac.cr"
+      name:
+        type: string
+        example: "Juan Vasquez"
+      status:
+        type: string
+        example: "Active"
+      role_id:
+        type: array
+        items:
+          $ref: "#/definitions/role_idResponse"
+      token:
+        type: string
+        example: "394FDJ347SL34"
+  AuthPost:
+    type: object
+    required:
+      - "email"
+      - "password"
+    properties:
+      email:
+        type: string
+        example: "semataoe@es.utn.ac.cr"
+      password:
+        type: string
+        example: "47IR39Rt38"
+#The paths are the ones with all the information of the CRUD methods of the end-points
+paths:
+  /Auth:
+    post:
+      tags:
+        - "Auth"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Post Method to authenticate user with email&password"
+          required: true
+          schema:
+            $ref: "#/definitions/AuthPost"
+      summary: "Generate the authentication post method"
+      description: "Create Auth"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "201":
+          description: "Authentication Succesfully"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/AuthGet"
+                  message:
+                    example: "Authentication succeed"
+                  message_code:
+                    example: "AUTH_SUCCEED"
+        "409":
+          description: "Credentials did not match"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User has been authenticated"
+                  message_code:
+                    example: "USER_AUTHENTICATED"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
