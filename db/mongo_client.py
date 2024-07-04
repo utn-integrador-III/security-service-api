@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from decouple import config
+import logging
 
 
 class Connection:
@@ -27,6 +28,7 @@ class Connection:
         except Exception as e:
             return e
         return result
+    
     def create_data(self, data):
         try:
             return self.collection.insert_one(data)
@@ -47,3 +49,10 @@ class Connection:
             return self.collection.delete_one({'id': id})
         except Exception as e:
             return e
+    
+    def find_by_email(self, email):
+        try:
+            return self.collection.find_one({'email': email})
+        except Exception as e:
+            logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
+            raise
