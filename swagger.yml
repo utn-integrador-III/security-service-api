@@ -15,6 +15,10 @@ basePath: "/booking_api"
 tags:
   - name: "Auth"
     description: "Auth paths"
+  - name: "Users"
+    description: "All users's Endpoints"
+  - name: "Roles"
+    description: "All Roles endpoints"
 #the schemes will define the protocol that are been used by the end-points inside the API
 schemes:
   - "https"
@@ -51,6 +55,18 @@ definitions:
         type: string
       message_code:
         type: string
+  InvalidIdErrorResponse:
+    type: object
+    properties:
+      data:
+        type: string
+        example: null
+      message:
+        type: string
+        example: "Invalid Id"
+      message_code:
+        type: string
+        example: "INVALID_ID"
   InternalErrorResponse:
     type: object
     properties:
@@ -94,6 +110,114 @@ definitions:
       password:
         type: string
         example: "47IR39Rt38"
+  UserGet:
+    type: object
+    properties:
+      _id:
+        type: string
+        example: "YRH347&%HF"
+      UserID:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: "John Allen Valerin"
+      password:
+        type: string
+        example: "484UTN"
+      email:
+        type: string
+        example: "jhonallen@est.utn.ac.cr"
+      status:
+        type: string
+        example: Active
+  UserGetById:
+    type: object
+    properties:
+      UserID:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: "John Allen Valerin"
+  UserPost:
+    type: object
+    required:
+      - "UserID"
+    properties:
+      UserID:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: "John Allen Valerin"
+      password:
+        type: string
+        example: "484UTN"
+      email:
+        type: string
+        example: "jhonallen@est.utn.ac.cr"
+      status:
+        type: string
+        example: Active
+  RoleGet:
+    type: object
+    properties:
+      RoleId:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: "Admin"
+      permissions:
+        type: array
+        items:
+          type: string
+        example:
+          - "read"
+          - "write"
+          - "delete"
+      creation_date:
+        type: object
+        example:
+          $date: "2024-06-08T00:00:00.000Z"
+      mod_date:
+        type: object
+        example:
+          $date: "2024-06-08T00:00:00.000Z"
+      is_active:
+        type: boolean
+        example: True
+  RolePost:
+    type: object
+    required:
+      - "RoleId"
+    properties:
+      RoleId:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: "Admin"
+      permissions:
+        type: array
+        items:
+          type: string
+        example:
+          - "read"
+          - "write"
+          - "delete"
+      creation_date:
+        type: object
+        example:
+          $date: "2024-06-08T00:00:00.000Z"
+      mod_date:
+        type: object
+        example:
+          $date: "2024-06-08T00:00:00.000Z"
+      is_active:
+        type: boolean
+        example: True
 #The paths are the ones with all the information of the CRUD methods of the end-points
 paths:
   /Auth:
@@ -140,6 +264,426 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
+  /user:
+    get:
+      tags:
+        - "Users"
+      summary: "Get list of all Users"
+      description: "Get list of all Users"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "A list of Users"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/UserGet"
+                  message:
+                    example: "Successfully requested"
+                  message_code:
+                    example: "OK_MSG"
+
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+    post:
+      tags:
+        - "Users"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User object that needs to be added"
+          required: true
+          schema:
+            $ref: "#/definitions/UserPost"
+      summary: "Create a User"
+      description: "Create a User"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "201":
+          description: "User succesfully created"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
+                  message:
+                    example: "User successfully created"
+                  message_code:
+                    example: "USER_SUCCESSFULLY_CREATED"
+        "409":
+          description: "User already exists"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User already exist"
+                  message_code:
+                    example: "USER_ALREADY_EXIST"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+    put:
+      tags:
+        - "Users"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User object that needs to be updated"
+          required: true
+          schema:
+            $ref: "#/definitions/UserGetById"
+      summary: "Update a User"
+      description: "Update a User"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "An updated user"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
+                  message:
+                    example: "User successfully updated"
+                  message_code:
+                    example: "USER_SUCCESSFULLY_UPDATED"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+
+        "422":
+          description: "Invalid Id"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Invalid Id"
+                  message_code:
+                    example: "INVALID_ID"
+  /user/{UserID}:
+    get:
+      tags:
+        - "Users"
+      summary: "Find user by ID"
+      description: "Returns a single User"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "UserID"
+          in: "path"
+          description: "UserId of report to return"
+          required: true
+          type: integer
+          format: integer
+      responses:
+        "200":
+          description: "Get single user successfully"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
+        "404":
+          description: "User not found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User not found"
+                  message_code:
+                    example: "USER_ITEM_NOT_FOUND"
+        "422":
+          description: "Invalid Object Id"
+          schema:
+            $ref: "#/definitions/InvalidIdErrorResponse"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+    delete:
+      tags:
+        - "Users"
+      summary: "Delete User by ID"
+      description: "Returns a deleted role"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "UserID"
+          in: "path"
+          description: "ID of user to delete"
+          required: true
+          type: integer
+          format: integer
+      responses:
+        "200":
+          description: "User successfully deleted"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
+                  message:
+                    example: "User successfully deleted"
+                  message_code:
+                    example: "USER_SUCCESSFULLY_DELETED"
+        "404":
+          description: "User not found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User not found"
+                  message_code:
+                    example: "USER_ITEM_NOT_FOUND"
+        "422":
+          description: "Invalid Object Id"
+          schema:
+            $ref: "#/definitions/InvalidIdErrorResponse"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+  /role:
+    get:
+      tags:
+        - "Roles"
+      summary: "Get list of all Roles"
+      description: "Get list of all Roles"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "A list of roles"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/RoleGet"
+                  message:
+                    example: "Successfully requested"
+                  message_code:
+                    example: "OK_MSG"
+
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+    post:
+      tags:
+        - "Roles"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Role object that needs to be added"
+          required: true
+          schema:
+            $ref: "#/definitions/RolePost"
+      summary: "Create a Role"
+      description: "Create a Role"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "201":
+          description: "Role succesfully created"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/RoleGet"
+                  message:
+                    example: "Role successfully created"
+                  message_code:
+                    example: "ROLE_SUCCESSFULLY_CREATED"
+        "409":
+          description: "Role already exists"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Role aready exist"
+                  message_code:
+                    example: "ROLE_ALREADY_EXIST"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+  /role/{RoleId}:
+    get:
+      tags:
+        - "Roles"
+      summary: "Find role by ID"
+      description: "Returns a single Report"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "RoleId"
+          in: "path"
+          description: "RoleId of report to return"
+          required: true
+          type: "integer"
+          format: "integer"
+      responses:
+        "200":
+          description: "Get single role successfully"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/RoleGet"
+        "404":
+          description: "Role not found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Role not found"
+                  message_code:
+                    example: "ROLE_ITEM_NOT_FOUND"
+        "422":
+          description: "Invalid Object Id"
+          schema:
+            $ref: "#/definitions/InvalidIdErrorResponse"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+    delete:
+      tags:
+        - "Roles"
+      summary: "Delete Role by ID"
+      description: "Returns a deleted role"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "RoleId"
+          in: "path"
+          description: "ID of role to delete"
+          required: true
+          type: "integer"
+          format: "integer"
+      responses:
+        "200":
+          description: "Role successfully deleted"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/RoleGet"
+                  message:
+                    example: "Role successfully deleted"
+                  message_code:
+                    example: "ROLE_SUCCESSFULLY_DELETED"
+        "404":
+          description: "Country not found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Role not found"
+                  message_code:
+                    example: "ROLE_ITEM_NOT_FOUND"
+        "422":
+          description: "Invalid Object Id"
+          schema:
+            $ref: "#/definitions/InvalidIdErrorResponse"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+    put:
+      tags:
+        - "Roles"
+      parameters:
+        - name: "RoleId"
+          in: "path"
+          description: "ID of role to update"
+          required: true
+          type: "integer"
+          format: "integer"
+        - in: "body"
+          name: "body"
+          description: "Role object that needs to be updated"
+          required: true
+          schema:
+            $ref: "#/definitions/RolePost"
+      summary: "Update an Role"
+      description: "Update an Role"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+          description: "An updated role"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/RoleGet"
+                  message:
+                    example: "Role successfully updated"
+                  message_code:
+                    example: "ROLE_SUCCESSFULLY_UPDATED"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+
+        "422":
+          description: "Invalid Id"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Invalid Id"
+                  message_code:
+                    example: "INVALID_ID"
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"
