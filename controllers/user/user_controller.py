@@ -18,11 +18,7 @@ import string
 logger = logging.getLogger(__name__)
 
 class UserController(Resource):
-<<<<<<< HEAD
-    route = '/register'
-=======
     route = '/auth/enrollment'
->>>>>>> 3700107 (Document the endpoint to enroll a new user. In swagger.yml add the endpoint inside Auth section & the existing endpoint with the path /register was changed to the correct /auth/enrollment)
     
     def post(self):
         try:

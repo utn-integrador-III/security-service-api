@@ -264,8 +264,6 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-<<<<<<< HEAD
-=======
   /auth/enrollment:
     post:
       tags:
@@ -303,7 +301,6 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
->>>>>>> 3700107 (Document the endpoint to enroll a new user. In swagger.yml add the endpoint inside Auth section & the existing endpoint with the path /register was changed to the correct /auth/enrollment)
   /user:
     get:
       tags:

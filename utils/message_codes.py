@@ -16,12 +16,8 @@ INVALID_EMAIL_DOMAIN = "INVALID_EMAIL_DOMAIN"
 USER_SUCCESSFULLY_CREATED = "USER_SUCCESSFULLY_CREATED"
 INVALID_NAME = "INVALID_NAME"
 INVALID_PASSWORD = "INVALID_PASSWORD"
-<<<<<<< HEAD
-=======
 USER_SUCCESSFULLY_ENROLLED = "USER_SUCCESSFULLY_ENROLLED"
 USER_ALREADY_ENROLLED = "USER_ALREADY_ENROLLED"
-
->>>>>>> 3700107 (Document the endpoint to enroll a new user. In swagger.yml add the endpoint inside Auth section & the existing endpoint with the path /register was changed to the correct /auth/enrollment)
 
 # Common Messages
 OK_MSG = 'OK_MSG'
