@@ -264,6 +264,46 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
+<<<<<<< HEAD
+=======
+  /auth/enrollment:
+    post:
+      tags:
+        - "Auth"
+      summary: "Enroll a new user"
+      description: "Enroll a new user"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "201":
+          description: "User successfully enrolled"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/AuthGet"
+                  message:
+                    example: "User successfully enrolled"
+                  message_code:
+                    example: "USER_SUCCESSFULLY_ENROLLED"
+        "409":
+          description: "User already exists"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User already enrolled"
+                  message_code:
+                    example: "USER_ALREADY_ENROLLED"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+>>>>>>> 3700107 (Document the endpoint to enroll a new user. In swagger.yml add the endpoint inside Auth section & the existing endpoint with the path /register was changed to the correct /auth/enrollment)
   /user:
     get:
       tags:
