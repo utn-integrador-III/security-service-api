@@ -3,6 +3,8 @@ from utils.encryption_utils import EncryptionUtil
 
 def find_user_by_email(email):
     user = __dbmanager__.collection.find_one({"email": email})
+    if user:
+        user['id'] = str(user.pop('_id'))  # Convertir ObjectId a string y asignarlo a 'id'
     return user
 
 class UserModel:
