@@ -264,6 +264,61 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
+  /auth/enrollment:
+    post:
+      tags:
+        - "Auth"
+      summary: "Enroll a new user"
+      description: "Enroll a new user"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User enrollment object"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              email:
+                type: "string"
+                format: "email"
+              password:
+                type: "string"
+                format: "password"
+            example:
+              name: "Christopher Carmona"
+              password: "mypassword123"
+              email: "chcamonael@est.utn.ac.cr"
+      responses:
+        "201":
+          description: "User successfully enrolled"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    $ref: "#/definitions/AuthGet"
+                  message:
+                    example: "User successfully enrolled"
+                  message_code:
+                    example: "USER_SUCCESSFULLY_ENROLLED"
+        "409":
+          description: "User already exists"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User already enrolled"
+                  message_code:
+                    example: "USER_ALREADY_ENROLLED"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
   /user:
     get:
       tags:

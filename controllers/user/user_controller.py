@@ -18,7 +18,7 @@ import string
 logger = logging.getLogger(__name__)
 
 class UserController(Resource):
-    route = '/register'
+    route = '/auth/enrollment'
     
     def post(self):
         try:
