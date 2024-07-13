@@ -274,6 +274,24 @@ paths:
         - "application/json"
       produces:
         - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User enrollment object"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              email:
+                type: "string"
+                format: "email"
+              password:
+                type: "string"
+                format: "password"
+            example:
+              name: "Christopher Carmona"
+              password: "mypassword123"
+              email: "chcamonael@est.utn.ac.cr"
       responses:
         "201":
           description: "User successfully enrolled"
