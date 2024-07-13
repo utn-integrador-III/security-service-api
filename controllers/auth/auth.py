@@ -1,6 +1,8 @@
 from flask_restful import Resource, reqparse
 from models.auth.auth import UserModel
 from utils.server_response import StatusCode, ServerResponse
+from utils.auth_manager import auth_required
+from utils.jwt_manager import generate_jwt
 
 class AuthController(Resource):
     route = '/login'
@@ -30,13 +32,16 @@ class AuthController(Resource):
         if user['status'] != "Active":
             return ServerResponse(message="User is not active", message_code="USER_NOT_ACTIVE", status=StatusCode.BAD_REQUEST)
 
+        # Generar el JWT
+        token = generate_jwt(user['id'])
+        
         return {
             'data': {
                 "email": user['email'],
                 "name": user['name'],
                 "status": user['status'],
                 "role_id": user['roles'],
-                "token": ""
+                "token": token
             },
             'message': "User has been authenticated",
             'message_code': "USER_AUTHENTICATED"
