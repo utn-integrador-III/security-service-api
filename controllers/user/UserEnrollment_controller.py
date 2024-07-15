@@ -72,7 +72,7 @@ class UserEnrollmentController(Resource):
             try:
                 # Crear nuevo usuario
                 verification_code = ''.join(random.choices(string.digits, k=4))
-                expiration_time = datetime.utcnow() + timedelta(minutes=5)
+                expiration_code = datetime.utcnow() + timedelta(minutes=5)
                 
                 user_data = {
                     'name': name,
@@ -80,7 +80,7 @@ class UserEnrollmentController(Resource):
                     'email': email,
                     'status': 'Pending',
                     'verification_code': verification_code,
-                    'expiration_time': expiration_time.isoformat()
+                    'expiration_code': expiration_code.isoformat()
                 }
                 
                 new_user = UserModel.create_user(user_data)

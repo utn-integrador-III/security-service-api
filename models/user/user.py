@@ -3,13 +3,13 @@ from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__
 
 class UserModel:
-    def __init__(self, name, email, password, status=None, verification_code=None, expiration_time=None, _id=None):
+    def __init__(self, name, email, password, status=None, verification_code=None, expiration_code=None, _id=None):
         self.name = name
         self.email = email
         self.password = password
         self.status = status
         self.verification_code = verification_code
-        self.expiration_time = expiration_time
+        self.expiration_code = expiration_code
         self._id = _id
     
     def to_dict(self):
@@ -19,7 +19,7 @@ class UserModel:
             'password': self.password,
             'status': self.status,
             'verification_code': self.verification_code,
-            'expiration_time': self.expiration_time,
+            'expiration_code': self.expiration_code,
             '_id': self._id
         }
     
