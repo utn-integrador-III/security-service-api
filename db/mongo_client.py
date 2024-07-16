@@ -56,3 +56,12 @@ class Connection:
         except Exception as e:
             logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
             raise
+    
+    def find_active_default_roles(self):
+        try:
+            roles_cursor = self.collection.find({'is_active': True, 'default_role': True})
+            roles_list = list(roles_cursor) 
+            return roles_list
+        except Exception as e:
+            logging.error(f"Database error in find_active_default_roles: {str(e)}", exc_info=True)
+            raise
