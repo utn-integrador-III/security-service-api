@@ -1,6 +1,4 @@
-from models.role.db_queries import __dbmanager__
-import logging
-
+from models.role.db_queries import db_find_active_roles
 
 class RoleModel:
     def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, app, _id=None):
@@ -30,11 +28,9 @@ class RoleModel:
         }
     
     @classmethod
-    def find_active_default_roles(cls):
+    def find_active_roles(cls):
         try:
-            return __dbmanager__.find_active_default_roles()
+            roles = db_find_active_roles()
+            return roles
         except Exception as e:
-            logging.error(f"Error finding active default roles: {str(e)}", exc_info=True)
-            raise Exception('Error finding active default roles')
-    
-    
+            raise Exception('Error finding active roles')

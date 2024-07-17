@@ -1,6 +1,6 @@
 import logging
+import random
 from datetime import datetime, timedelta
-from dateutil.parser import isoparse
 from flask import request
 from flask_restful import Resource
 from validate_email import validate_email
@@ -20,8 +20,6 @@ class UserEnrollmentController(Resource):
             name = data.get('name')
             password = data.get('password')
             email = data.get('email')
-            verification_code = data.get('verification_code')
-            expiration_code = data.get('expiration_code')
             provided_roles = data.get('roles', [])
             
             # Validar email
@@ -31,7 +29,8 @@ class UserEnrollmentController(Resource):
                     message_code=INVALID_EMAIL_DOMAIN,
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 )
-            if 'utn.ac.cr' not in email:
+            
+            if not any(domain in email for domain in ['utn.ac.cr', 'est.utn.ac.cr', 'adm.utn.ac.cr']):
                 return ServerResponse(
                     message="The entered domain does not meet the established standards",
                     message_code=INVALID_EMAIL_DOMAIN,
@@ -64,43 +63,45 @@ class UserEnrollmentController(Resource):
                         status=StatusCode.CONFLICT
                     )
                 
-                # Obtener roles activos y predeterminados
-                default_roles = RoleModel.find_active_default_roles()
+                # Obtener roles activos
+                active_roles = RoleModel.find_active_roles()
                 
-                # Validar que haya al menos un rol activo y predeterminado
-                if not default_roles:
+                # Obtener roles activos y predeterminados
+                default_roles = [role for role in active_roles if role.get('default_role', False)]
+                
+                # Validar que haya al menos un rol activo
+                if not active_roles:
                     return ServerResponse(
-                        message="No active default roles found",
+                        message="No active roles found",
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     )
                 
-                # Filtrar nombres de roles válidos
-                valid_role_names = [role['name'] for role in default_roles if 'name' in role]
-
+                # Filtrar nombres de roles válidos y convertirlos a minúsculas
+                valid_role_names = [role.get('name', '').lower().strip() for role in active_roles]
+                
                 # Validar que se haya encontrado al menos un nombre de rol válido
                 if not valid_role_names:
                     return ServerResponse(
                         message="No valid role names found",
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     )
-
+                
                 # Validar que todos los roles proporcionados existan en la base de datos
-                for role in provided_roles:
-                    if role not in valid_role_names:
-                        return ServerResponse(
-                            message=f"Role '{role}' is not a valid role",
-                            message_code=INVALID_ROLE,
-                            status=StatusCode.UNPROCESSABLE_ENTITY
-                        )
-
-                # Convertir el código de expiración a formato datetime
-                try:
-                    expiration_time = isoparse(expiration_code)
-                except ValueError:
+                invalid_roles = [role for role in provided_roles if role.lower().strip() not in valid_role_names]
+                if invalid_roles:
                     return ServerResponse(
-                        message="Invalid expiration code format",
+                        message=f"The following roles are not valid: {', '.join(invalid_roles)}",
+                        message_code=INVALID_ROLE,
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     )
+                
+                # Si no se proporcionaron roles, usar los roles predeterminados
+                if not provided_roles:
+                    provided_roles = [role.get('name') for role in default_roles]
+                
+                # Generar código de verificación y código de expiración
+                verification_code = random.randint(100000, 999999)
+                expiration_code = datetime.utcnow() + timedelta(minutes=5)
                 
                 # Crear nuevo usuario
                 user_data = {
@@ -108,9 +109,11 @@ class UserEnrollmentController(Resource):
                     'password': password,
                     'email': email,
                     'status': 'Pending',
-                    'verification_code': int(verification_code),
-                    'expiration_code': expiration_time,
-                    'roles': provided_roles if provided_roles else valid_role_names
+                    'verification_code': verification_code,
+                    'expiration_code': expiration_code,
+                    'roles': provided_roles,
+                    'token': "",
+                    'is_session_active': False
                 }
                 
                 new_user = UserModel.create_user(user_data)
