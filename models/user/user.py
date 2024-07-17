@@ -3,14 +3,14 @@ from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__
 
 class UserModel:
-    def __init__(self, name, email, password, status=None, verification_code=None, expiration_code=None, _id=None):
+    def __init__(self, name, password, email, status, verification_code, expiration_code, roles):
         self.name = name
-        self.email = email
         self.password = password
+        self.email = email
         self.status = status
         self.verification_code = verification_code
         self.expiration_code = expiration_code
-        self._id = _id
+        self.roles = roles
     
     def to_dict(self):
         return {
@@ -19,8 +19,7 @@ class UserModel:
             'password': self.password,
             'status': self.status,
             'verification_code': self.verification_code,
-            'expiration_code': self.expiration_code,
-            '_id': self._id
+            'expiration_code': self.expiration_code
         }
     
     @classmethod
@@ -34,7 +33,16 @@ class UserModel:
             result = __dbmanager__.create_data(user_data)
             
             if result:
-                return cls(**user_data)
+                # Crear instancia de UserModel con los campos esperados
+                return cls(
+                    name=user_data['name'],
+                    password=user_data['password'],
+                    email=user_data['email'],
+                    status=user_data['status'],
+                    verification_code=user_data['verification_code'],
+                    expiration_code=user_data['expiration_code'],
+                    roles=user_data['roles']
+                )
             else:
                 raise Exception("Failed to create user in database")
         except Exception as e:

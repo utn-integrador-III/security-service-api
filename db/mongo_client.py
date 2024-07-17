@@ -56,3 +56,4 @@ class Connection:
         except Exception as e:
             logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
             raise
+        

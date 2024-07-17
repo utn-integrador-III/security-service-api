@@ -1,21 +1,15 @@
 import logging
-from flask_restful import Resource
+import random
+from datetime import datetime, timedelta
 from flask import request
+from flask_restful import Resource
+from validate_email import validate_email
 from models.user.user import UserModel
+from models.role.role import RoleModel
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
-    USER_ALREADY_REGISTERED,
-    INVALID_EMAIL_DOMAIN,
-    USER_SUCCESSFULLY_CREATED,
-    INVALID_NAME,
-    INVALID_PASSWORD
+    INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, USER_SUCCESSFULLY_CREATED, INVALID_ROLE
 )
-from email_validator import validate_email, EmailNotValidError
-from datetime import datetime, timedelta
-import random
-import string
-
-logger = logging.getLogger(__name__)
 
 class UserEnrollmentController(Resource):
     route = '/user/enrollment'
@@ -26,20 +20,19 @@ class UserEnrollmentController(Resource):
             name = data.get('name')
             password = data.get('password')
             email = data.get('email')
+            provided_roles = data.get('roles', [])
             
             # Validar email
-            try:
-                valid = validate_email(email)
-                email = valid.email
-                if not email.endswith('@est.utn.ac.cr'):
-                    return ServerResponse(
-                        message="The entered domain does not meet the established standards",
-                        message_code=INVALID_EMAIL_DOMAIN,
-                        status=StatusCode.UNPROCESSABLE_ENTITY
-                    )
-            except EmailNotValidError:
+            if not email or not validate_email(email):
                 return ServerResponse(
                     message="The provided email is not valid",
+                    message_code=INVALID_EMAIL_DOMAIN,
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                )
+            
+            if not any(domain in email for domain in ['utn.ac.cr', 'est.utn.ac.cr', 'adm.utn.ac.cr']):
+                return ServerResponse(
+                    message="The entered domain does not meet the established standards",
                     message_code=INVALID_EMAIL_DOMAIN,
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 )
@@ -60,27 +53,67 @@ class UserEnrollmentController(Resource):
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 )
             
-            # Verificar si el usuario ya existe
-            existing_user = UserModel.find_by_email(email)
-            if existing_user:
-                return ServerResponse(
-                    message="The user is already registered",
-                    message_code=USER_ALREADY_REGISTERED,
-                    status=StatusCode.CONFLICT
-                )
-            
             try:
-                # Crear nuevo usuario
-                verification_code = ''.join(random.choices(string.digits, k=4))
+                # Verificar si el usuario ya existe
+                existing_user = UserModel.find_by_email(email)
+                if existing_user:
+                    return ServerResponse(
+                        message="The user is already registered",
+                        message_code=USER_ALREADY_REGISTERED,
+                        status=StatusCode.CONFLICT
+                    )
+                
+                # Obtener roles activos
+                active_roles = RoleModel.find_active_roles()
+                
+                # Obtener roles activos y predeterminados
+                default_roles = [role for role in active_roles if role.get('default_role', False)]
+                
+                # Validar que haya al menos un rol activo
+                if not active_roles:
+                    return ServerResponse(
+                        message="No active roles found",
+                        status=StatusCode.UNPROCESSABLE_ENTITY
+                    )
+                
+                # Filtrar nombres de roles válidos y convertirlos a minúsculas
+                valid_role_names = [role.get('name', '').lower().strip() for role in active_roles]
+                
+                # Validar que se haya encontrado al menos un nombre de rol válido
+                if not valid_role_names:
+                    return ServerResponse(
+                        message="No valid role names found",
+                        status=StatusCode.UNPROCESSABLE_ENTITY
+                    )
+                
+                # Validar que todos los roles proporcionados existan en la base de datos
+                invalid_roles = [role for role in provided_roles if role.lower().strip() not in valid_role_names]
+                if invalid_roles:
+                    return ServerResponse(
+                        message=f"The following roles are not valid: {', '.join(invalid_roles)}",
+                        message_code=INVALID_ROLE,
+                        status=StatusCode.UNPROCESSABLE_ENTITY
+                    )
+                
+                # Si no se proporcionaron roles, usar los roles predeterminados
+                if not provided_roles:
+                    provided_roles = [role.get('name') for role in default_roles]
+                
+                # Generar código de verificación y código de expiración
+                verification_code = random.randint(100000, 999999)
                 expiration_code = datetime.utcnow() + timedelta(minutes=5)
                 
+                # Crear nuevo usuario
                 user_data = {
                     'name': name,
                     'password': password,
                     'email': email,
                     'status': 'Pending',
                     'verification_code': verification_code,
-                    'expiration_code': expiration_code.isoformat()
+                    'expiration_code': expiration_code,
+                    'roles': provided_roles,
+                    'token': "",
+                    'is_session_active': False
                 }
                 
                 new_user = UserModel.create_user(user_data)
@@ -91,14 +124,14 @@ class UserEnrollmentController(Resource):
                     status=StatusCode.OK
                 )
             except Exception as e:
-                logger.error(f"Error creating user: {str(e)}", exc_info=True)
+                logging.error(f"Error creating user: {str(e)}", exc_info=True)
                 return ServerResponse(
                     message="Error creating user",
                     status=StatusCode.INTERNAL_SERVER_ERROR
                 )
         
         except Exception as e:
-            logger.error(f"An unexpected error occurred: {str(e)}", exc_info=True)
+            logging.error(f"An unexpected error occurred: {str(e)}", exc_info=True)
             return ServerResponse(
                 message="An unexpected error occurred.",
                 status=StatusCode.INTERNAL_SERVER_ERROR
