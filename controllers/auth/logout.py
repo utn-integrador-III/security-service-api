@@ -2,7 +2,6 @@ from flask_restful import Resource, reqparse
 from models.auth.logout import LogoutModel
 from utils.server_response import StatusCode, ServerResponse
 from utils.auth_manager import auth_required
-from models.auth.db_queries import __dbmanager__
 
 class LogoutController(Resource):
     route = '/auth/logout'
