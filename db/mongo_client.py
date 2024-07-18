@@ -1,6 +1,7 @@
 from pymongo import MongoClient
 from decouple import config
 import logging
+from bson.objectid import ObjectId
 
 
 class Connection:
@@ -11,8 +12,8 @@ class Connection:
         self.connect(collection_name)
 
     def connect(self, collection_name):
-        uri = config('MONGO_URL')
-        db = config('MONGO_DB')
+        uri = config("MONGO_URL")
+        db = config("MONGO_DB")
         self.collection = MongoClient(uri)[db][collection_name]
 
     def get_all_data(self):
@@ -22,37 +23,48 @@ class Connection:
             return e
         return result
 
+    def find_one(self, name):
+        try:
+            result = self.collection.find_one(name)
+            return result
+        except Exception as e:
+            logging.exception(e)
+            return str(e)
+
     def get_by_id(self, id):
         try:
-            result = self.collection.find({'id':id})
+            result = self.collection.find_one({"_id": ObjectId(id)})
         except Exception as e:
             return e
         return result
-    
+
     def create_data(self, data):
         try:
             return self.collection.insert_one(data)
         except Exception as e:
             return e
 
-    def update_data(self, id, new_deal_data):
+    def update_data(self, filter_id, new_data):
         try:
-            self.collection.update_one(
-                {"id": id},
-                {"$set": new_deal_data}
-            )
+            self.collection.update_one({"_id": ObjectId(filter_id)}, {"$set": new_data})
         except Exception as e:
-            return e
+            logging.exception(e)
+            raise e
+
+    def update_data(self, id, new_data):
+        try:
+            result = self.collection.update_one({"_id": ObjectId(id)}, {"$set": new_data})
+            return result.modified_count > 0
+        except Exception as e:
+            logging.exception(e)
+            return str(e)
 
     def delete_data(self, id):
         try:
-            return self.collection.delete_one({'id': id})
+            result = self.collection.delete_one({"_id": ObjectId(id)})
+            if result.deleted_count > 0:
+                return True
+            else:
+                return False
         except Exception as e:
-            return e
-    
-    def find_by_email(self, email):
-        try:
-            return self.collection.find_one({'email': email})
-        except Exception as e:
-            logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
-            raise
+            raise Exception(e)

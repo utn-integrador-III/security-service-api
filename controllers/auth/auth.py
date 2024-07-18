@@ -4,8 +4,8 @@ from utils.server_response import StatusCode, ServerResponse
 from utils.auth_manager import auth_required
 from utils.jwt_manager import generate_jwt
 
-class AuthController(Resource):
-    route = '/login'
+class LoginController(Resource):
+    route = '/auth/login'
 
     def post(self):
         parser = reqparse.RequestParser()
@@ -33,7 +33,7 @@ class AuthController(Resource):
             return ServerResponse(message="User is not active", message_code="USER_NOT_ACTIVE", status=StatusCode.BAD_REQUEST)
 
         # Generar el JWT
-        token = generate_jwt(user['id'])
+        token = generate_jwt(user['roles'])
         
         return {
             'data': {
