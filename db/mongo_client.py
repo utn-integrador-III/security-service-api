@@ -22,6 +22,13 @@ class Connection:
             return e
         return result
 
+    def get_by_query(self, query):
+        try:
+            result = self.collection.find(query)
+        except Exception as e:
+            return e
+        return result
+
     def get_by_id(self, id):
         try:
             result = self.collection.find({'id':id})
