@@ -103,13 +103,21 @@ definitions:
     required:
       - "email"
       - "password"
+      - "name"
+      - "role"
     properties:
       email:
         type: string
-        example: "semataoe@es.utn.ac.cr"
+        example: "emrodriguezso@es.utn.ac.cr"
       password:
         type: string
         example: "47IR39Rt38"
+      name:
+        type: string
+        example: "Emmanuel Rodriguez"
+      role:
+        type: string
+        example: "Lost-Property/Admin"
   LogoutResponse:
     type: object
     required:
@@ -249,7 +257,7 @@ paths:
       produces:
         - "application/json"
       responses:
-        "201":
+        "200":
           description: "Authentication Succesfully"
           schema:
             allOf:
@@ -261,16 +269,51 @@ paths:
                     example: "Authentication succeed"
                   message_code:
                     example: "AUTH_SUCCEED"
-        "409":
-          description: "Credentials did not match"
+        "400":
+          description: "Invalid credentials or user does not exist"
           schema:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
               - properties:
                   message:
-                    example: "User has been authenticated"
+                    example: "Invalid input"
                   message_code:
-                    example: "USER_AUTHENTICATED"
+                    example: "INVALID_INPUT"
+        "409":
+          description: "Conflic (User already exists)"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "The user is already registered"
+                  message_code:
+                    example: "USER_ALREADY_REGISTERED"
+        "422":
+          description: "Unprocessable Entity - Validation Errors"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                enum:
+                  - "The provided email is not valid"
+                  - "The entered domain does not meet the established standards"
+                  - "The name does not meet the established standards"
+                  - "The password does not meet the established standards"
+                  - "No active roles found"
+                  - "No valid role names found"
+                  - "The provided role is not valid: role_name"
+                example: "The provided email is not valid"
+              message_code:
+                type: string
+                enum:
+                  - "INVALID_EMAIL_DOMAIN"
+                  - "INVALID_NAME"
+                  - "INVALID_PASSWORD"
+                  - "INVALID_ROLE"
+                example: "INVALID_EMAIL_DOMAIN"
+
         "500":
           description: "Internal Server Error"
           schema:

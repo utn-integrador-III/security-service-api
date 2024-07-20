@@ -20,7 +20,7 @@ class UserEnrollmentController(Resource):
             name = data.get('name')
             password = data.get('password')
             email = data.get('email')
-            provided_roles = data.get('roles', [])
+            provided_role = data.get('role', '')
             
             # Validar email
             if not email or not validate_email(email):
@@ -66,9 +66,6 @@ class UserEnrollmentController(Resource):
                 # Obtener roles activos
                 active_roles = RoleModel.find_active_roles()
                 
-                # Obtener roles activos y predeterminados
-                default_roles = [role for role in active_roles if role.get('default_role', False)]
-                
                 # Validar que haya al menos un rol activo
                 if not active_roles:
                     return ServerResponse(
@@ -86,18 +83,13 @@ class UserEnrollmentController(Resource):
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     )
                 
-                # Validar que todos los roles proporcionados existan en la base de datos
-                invalid_roles = [role for role in provided_roles if role.lower().strip() not in valid_role_names]
-                if invalid_roles:
+                # Validar que el rol proporcionado exista en la base de datos
+                if provided_role.lower().strip() not in valid_role_names:
                     return ServerResponse(
-                        message=f"The following roles are not valid: {', '.join(invalid_roles)}",
+                        message=f"The provided role is not valid: {provided_role}",
                         message_code=INVALID_ROLE,
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     )
-                
-                # Si no se proporcionaron roles, usar los roles predeterminados
-                if not provided_roles:
-                    provided_roles = [role.get('name') for role in default_roles]
                 
                 # Generar código de verificación y código de expiración
                 verification_code = random.randint(100000, 999999)
@@ -111,7 +103,7 @@ class UserEnrollmentController(Resource):
                     'status': 'Pending',
                     'verification_code': verification_code,
                     'expiration_code': expiration_code,
-                    'roles': provided_roles,
+                    'role': provided_role,
                     'token': "",
                     'is_session_active': False
                 }
@@ -119,8 +111,19 @@ class UserEnrollmentController(Resource):
                 new_user = UserModel.create_user(user_data)
                 
                 return ServerResponse(
-                    message="User successfully created",
-                    message_code=USER_SUCCESSFULLY_CREATED,
+                    data={
+                        'email': new_user.email,
+                        'name': new_user.name,
+                        'status': new_user.status,
+                        'role_id': [
+                            {
+                                'roles': new_user.role
+                            }
+                        ],
+                        'token': new_user.token
+                    },
+                    message="Authentication succeed",
+                    message_code="AUTH_SUCCEED",
                     status=StatusCode.OK
                 )
             except Exception as e:
