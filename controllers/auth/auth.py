@@ -40,7 +40,7 @@ class AuthController(Resource):
                 "email": user['email'],
                 "name": user['name'],
                 "status": user['status'],
-                "role_id": user['roles'],
+                "role": user['role'],
                 "token": token
             },
             'message': "User has been authenticated",

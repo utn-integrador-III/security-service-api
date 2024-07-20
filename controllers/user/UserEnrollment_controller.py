@@ -8,7 +8,7 @@ from models.user.user import UserModel
 from models.role.role import RoleModel
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
-    INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, USER_SUCCESSFULLY_CREATED, INVALID_ROLE
+    CREATED, INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, INVALID_ROLE
 )
 
 class UserEnrollmentController(Resource):
@@ -20,7 +20,7 @@ class UserEnrollmentController(Resource):
             name = data.get('name')
             password = data.get('password')
             email = data.get('email')
-            provided_role = data.get('role', '')
+            provided_role = data.get('role', '').strip().lower()
             
             # Validar email
             if not email or not validate_email(email):
@@ -83,8 +83,20 @@ class UserEnrollmentController(Resource):
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     )
                 
+                # Obtener el rol predeterminado
+                default_role = RoleModel.find_default_role()
+                if not default_role:
+                    return ServerResponse(
+                        message="Default role not found",
+                        status=StatusCode.INTERNAL_SERVER_ERROR
+                    )
+                
+                # Asignar rol predeterminado si no se proporciona uno o si el rol proporcionado no es válido
+                if not provided_role or provided_role not in valid_role_names:
+                    provided_role = default_role['name'].lower().strip()  # Obtener el nombre del rol predeterminado
+                
                 # Validar que el rol proporcionado exista en la base de datos
-                if provided_role.lower().strip() not in valid_role_names:
+                if provided_role not in valid_role_names:
                     return ServerResponse(
                         message=f"The provided role is not valid: {provided_role}",
                         message_code=INVALID_ROLE,
@@ -103,7 +115,7 @@ class UserEnrollmentController(Resource):
                     'status': 'Pending',
                     'verification_code': verification_code,
                     'expiration_code': expiration_code,
-                    'role': provided_role,
+                    'role': provided_role, 
                     'token': "",
                     'is_session_active': False
                 }
@@ -111,20 +123,9 @@ class UserEnrollmentController(Resource):
                 new_user = UserModel.create_user(user_data)
                 
                 return ServerResponse(
-                    data={
-                        'email': new_user.email,
-                        'name': new_user.name,
-                        'status': new_user.status,
-                        'role_id': [
-                            {
-                                'roles': new_user.role
-                            }
-                        ],
-                        'token': new_user.token
-                    },
-                    message="Authentication succeed",
-                    message_code="AUTH_SUCCEED",
-                    status=StatusCode.OK
+                    message="User created successfully",
+                    message_code=CREATED,
+                    status=StatusCode.CREATED,
                 )
             except Exception as e:
                 logging.error(f"Error creating user: {str(e)}", exc_info=True)

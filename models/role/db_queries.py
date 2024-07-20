@@ -10,3 +10,10 @@ def db_find_active_roles():
         return roles_list
     except Exception as e:
         raise RuntimeError(f'Error finding active roles: {str(e)}')
+    
+def db_find_default_role():
+    try:
+        default_role = __dbmanager__.collection.find_one({'default_role': True})
+        return default_role
+    except Exception as e:
+        raise RuntimeError(f'Error finding default role: {str(e)}')
