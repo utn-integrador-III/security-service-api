@@ -56,4 +56,16 @@ class Connection:
         except Exception as e:
             logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
             raise
-        
+    def update_verification_code(self, email, verification_code, expiration_time):
+        try:
+            self.collection.update_one(
+                {"email": email},
+                {"$set": {
+                    "verification_code": verification_code,
+                    "expiration_time": expiration_time
+                }}
+            )
+        except Exception as e:
+            logging.error(f"Error updating verification code: {str(e)}", exc_info=True)
+            raise Exception('Error updating verification code')
+

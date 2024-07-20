@@ -1,20 +1,20 @@
-import logging
-import random
-from datetime import datetime, timedelta
-from flask import request
 from flask_restful import Resource
-from validate_email import validate_email
+from flask import request
+from email_validator import validate_email, EmailNotValidError  # Asegúrate de importar la librería correcta
 from models.user.user import UserModel
 from models.role.role import RoleModel
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
     INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, USER_SUCCESSFULLY_CREATED, INVALID_ROLE
 )
+import logging
+import random
+from datetime import datetime, timedelta
 
 class UserEnrollmentController(Resource):
     route = '/user/enrollment'
     
-    def post(self):
+    def post(self): 
         try:
             data = request.json
             name = data.get('name')
@@ -23,9 +23,12 @@ class UserEnrollmentController(Resource):
             provided_roles = data.get('roles', [])
             
             # Validar email
-            if not email or not validate_email(email):
+            try:
+                valid = validate_email(email)  # Validar el email
+                email = valid.email  # Actualizar con el email validado
+            except EmailNotValidError as e:
                 return ServerResponse(
-                    message="The provided email is not valid",
+                    message=str(e),
                     message_code=INVALID_EMAIL_DOMAIN,
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 )
@@ -100,7 +103,7 @@ class UserEnrollmentController(Resource):
                     provided_roles = [role.get('name') for role in default_roles]
                 
                 # Generar código de verificación y código de expiración
-                verification_code = random.randint(100000, 999999)
+                verification_code = 123456  # Código de verificación fijo
                 expiration_code = datetime.utcnow() + timedelta(minutes=5)
                 
                 # Crear nuevo usuario

@@ -56,3 +56,11 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error finding user by email: {str(e)}", exc_info=True)
             raise Exception('Error finding user by email')
+
+    @staticmethod
+    def save_to_db(user):
+        try:
+            return __dbmanager__.update_data(user)
+        except Exception as e:
+            logging.error(f"Error saving user to database: {str(e)}", exc_info=True)
+            raise Exception('Error saving user to database')
