@@ -110,6 +110,17 @@ definitions:
       password:
         type: string
         example: "47IR39Rt38"
+  LogoutResponse:
+    type: object
+    required:
+      - "email"
+    properties:
+      message:
+        type: string
+        example: "User has been logged out"
+      message_code:
+        type: string
+        example: "USER_LOGGED_OUT"
   UserGet:
     type: object
     properties:
@@ -315,6 +326,49 @@ paths:
                     example: "User already enrolled"
                   message_code:
                     example: "USER_ALREADY_ENROLLED"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+
+  /auth/logout:
+    put:
+      tags:
+        - "Auth"
+      summary: "Log out a user"
+      description: "Logs out a user by email"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User email for logout"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              email:
+                type: "string"
+                format: "email"
+            example:
+              email: "user@example.com"
+      responses:
+        "200":
+          description: "User successfully logged out"
+          schema:
+            $ref: "#/definitions/LogoutResponse"
+        "400":
+          description: "Invalid credentials or user does not exist"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "The user does not exist"
+                  message_code:
+                    example: "INVALID_CREDENTIALS"
         "500":
           description: "Internal Server Error"
           schema:
