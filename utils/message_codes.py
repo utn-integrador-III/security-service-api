@@ -3,7 +3,6 @@ This file defines the message codes for multilanguage in the frontend
 Using i18n standard, please check multilanguage folder to add or modify messages
 assets/i18n/<lang>
 """
-
 # Authentication Messages
 INVALID_EMAIL_DOMAIN = 'INVALID_EMAIL_DOMAIN'
 INVALID_CREDENTIALS = 'INVALID_CREDENTIALS'
@@ -57,3 +56,4 @@ ROL_SUCCESSFULLY_DELETED = "ROL_SUCCESSFULLY_DELETED" # Rol successfully deleted
 ROL_SUCCESSFULLY_CREATED = "ROL_SUCCESSFULLY_CREATED" # Rol created successfully
 ROL_ALREADY_REGISTERED = "ROL_ALREADY_REGISTERED"
 ROL_SUCCESSFULLY_ENROLLED = "ROL_SUCCESSFULLY_ENROLLED"
+INVALID_ROLE = "INVALID_ROLE"

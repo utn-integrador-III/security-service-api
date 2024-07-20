@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from utils.server_response import ServerResponse, StatusCode
-from models.rol.rol import RolModel
+from models.role.role import RoleModel
 from .parser import RolParser
 import logging
 
@@ -19,7 +19,7 @@ class RolController(Resource):
                 response = ServerResponse(message="name not inserted", message_code="ROL_NOT_FOUND", status=StatusCode.NOT_FOUND)
                 return response.to_response()
             
-            result = RolModel.get_by_name(object_name)
+            result = RoleModel.get_by_name(object_name)
             
             if isinstance(result, dict) and "error" in result:
                 response = ServerResponse(

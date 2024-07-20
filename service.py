@@ -3,8 +3,7 @@ from controllers.health.controller import HealthController
 from controllers.auth.auth import LoginController
 from controllers.auth.verify_auth import AuthController
 from controllers.rol.rol_controller import RolController
-from controllers.user.user_controller import UserController
-
+from controllers.user.UserEnrollment_controller import UserEnrollmentController
 def addServiceLayer(api: Api):
     # Health
     api.add_resource(HealthController, HealthController.route)
@@ -15,4 +14,4 @@ def addServiceLayer(api: Api):
     # Rol
     api.add_resource(RolController, RolController.route)
     # User
-    api.add_resource(UserController, UserController.route)
+    api.add_resource(UserEnrollmentController, UserEnrollmentController.route)

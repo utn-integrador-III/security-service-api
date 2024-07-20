@@ -264,10 +264,10 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-  /auth/enrollment:
+  /user/enrollment:
     post:
       tags:
-        - "Auth"
+        - "Users"
       summary: "Enroll a new user"
       description: "Enroll a new user"
       consumes:
@@ -319,213 +319,213 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-  /user:
-    get:
-      tags:
-        - "Users"
-      summary: "Get list of all Users"
-      description: "Get list of all Users"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      responses:
-        "200":
-          description: "A list of Users"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/UserGet"
-                  message:
-                    example: "Successfully requested"
-                  message_code:
-                    example: "OK_MSG"
+  # /user:
+  #   get:
+  #     tags:
+  #       - "Users"
+  #     summary: "Get list of all Users"
+  #     description: "Get list of all Users"
+  #     consumes:
+  #       - "application/json"
+  #     produces:
+  #       - "application/json"
+  #     responses:
+  #       "200":
+  #         description: "A list of Users"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/Response"
+  #             - properties:
+  #                 data:
+  #                   items:
+  #                     $ref: "#/definitions/UserGet"
+  #                 message:
+  #                   example: "Successfully requested"
+  #                 message_code:
+  #                   example: "OK_MSG"
 
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-    post:
-      tags:
-        - "Users"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "User object that needs to be added"
-          required: true
-          schema:
-            $ref: "#/definitions/UserPost"
-      summary: "Create a User"
-      description: "Create a User"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      responses:
-        "201":
-          description: "User succesfully created"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
-                  message:
-                    example: "User successfully created"
-                  message_code:
-                    example: "USER_SUCCESSFULLY_CREATED"
-        "409":
-          description: "User already exists"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User already exist"
-                  message_code:
-                    example: "USER_ALREADY_EXIST"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-    put:
-      tags:
-        - "Users"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "User object that needs to be updated"
-          required: true
-          schema:
-            $ref: "#/definitions/UserGetById"
-      summary: "Update a User"
-      description: "Update a User"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      responses:
-        "200":
-          description: "An updated user"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
-                  message:
-                    example: "User successfully updated"
-                  message_code:
-                    example: "USER_SUCCESSFULLY_UPDATED"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
+  #       "500":
+  #         description: "Internal Server Error"
+  #         schema:
+  #           $ref: "#/definitions/InternalErrorResponse"
+  #   post:
+  #     tags:
+  #       - "Users"
+  #     parameters:
+  #       - in: "body"
+  #         name: "body"
+  #         description: "User object that needs to be added"
+  #         required: true
+  #         schema:
+  #           $ref: "#/definitions/UserPost"
+  #     summary: "Create a User"
+  #     description: "Create a User"
+  #     consumes:
+  #       - "application/json"
+  #     produces:
+  #       - "application/json"
+  #     responses:
+  #       "201":
+  #         description: "User succesfully created"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/Response"
+  #             - properties:
+  #                 data:
+  #                   $ref: "#/definitions/UserGet"
+  #                 message:
+  #                   example: "User successfully created"
+  #                 message_code:
+  #                   example: "USER_SUCCESSFULLY_CREATED"
+  #       "409":
+  #         description: "User already exists"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/ErrorResponse"
+  #             - properties:
+  #                 message:
+  #                   example: "User already exist"
+  #                 message_code:
+  #                   example: "USER_ALREADY_EXIST"
+  #       "500":
+  #         description: "Internal Server Error"
+  #         schema:
+  #           $ref: "#/definitions/InternalErrorResponse"
+  #   put:
+  #     tags:
+  #       - "Users"
+  #     parameters:
+  #       - in: "body"
+  #         name: "body"
+  #         description: "User object that needs to be updated"
+  #         required: true
+  #         schema:
+  #           $ref: "#/definitions/UserGetById"
+  #     summary: "Update a User"
+  #     description: "Update a User"
+  #     consumes:
+  #       - "application/json"
+  #     produces:
+  #       - "application/json"
+  #     responses:
+  #       "200":
+  #         description: "An updated user"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/Response"
+  #             - properties:
+  #                 data:
+  #                   $ref: "#/definitions/UserGet"
+  #                 message:
+  #                   example: "User successfully updated"
+  #                 message_code:
+  #                   example: "USER_SUCCESSFULLY_UPDATED"
+  #       "500":
+  #         description: "Internal Server Error"
+  #         schema:
+  #           $ref: "#/definitions/InternalErrorResponse"
 
-        "422":
-          description: "Invalid Id"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Invalid Id"
-                  message_code:
-                    example: "INVALID_ID"
-  /user/{UserID}:
-    get:
-      tags:
-        - "Users"
-      summary: "Find user by ID"
-      description: "Returns a single User"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "UserID"
-          in: "path"
-          description: "UserId of report to return"
-          required: true
-          type: integer
-          format: integer
-      responses:
-        "200":
-          description: "Get single user successfully"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
-        "404":
-          description: "User not found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User not found"
-                  message_code:
-                    example: "USER_ITEM_NOT_FOUND"
-        "422":
-          description: "Invalid Object Id"
-          schema:
-            $ref: "#/definitions/InvalidIdErrorResponse"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-    delete:
-      tags:
-        - "Users"
-      summary: "Delete User by ID"
-      description: "Returns a deleted role"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - name: "UserID"
-          in: "path"
-          description: "ID of user to delete"
-          required: true
-          type: integer
-          format: integer
-      responses:
-        "200":
-          description: "User successfully deleted"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
-                  message:
-                    example: "User successfully deleted"
-                  message_code:
-                    example: "USER_SUCCESSFULLY_DELETED"
-        "404":
-          description: "User not found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User not found"
-                  message_code:
-                    example: "USER_ITEM_NOT_FOUND"
-        "422":
-          description: "Invalid Object Id"
-          schema:
-            $ref: "#/definitions/InvalidIdErrorResponse"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
+  #       "422":
+  #         description: "Invalid Id"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/ErrorResponse"
+  #             - properties:
+  #                 message:
+  #                   example: "Invalid Id"
+  #                 message_code:
+  #                   example: "INVALID_ID"
+  # /user/{UserID}:
+  #   get:
+  #     tags:
+  #       - "Users"
+  #     summary: "Find user by ID"
+  #     description: "Returns a single User"
+  #     consumes:
+  #       - "application/json"
+  #     produces:
+  #       - "application/json"
+  #     parameters:
+  #       - name: "UserID"
+  #         in: "path"
+  #         description: "UserId of report to return"
+  #         required: true
+  #         type: integer
+  #         format: integer
+  #     responses:
+  #       "200":
+  #         description: "Get single user successfully"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/Response"
+  #             - properties:
+  #                 data:
+  #                   $ref: "#/definitions/UserGet"
+  #       "404":
+  #         description: "User not found"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/ErrorResponse"
+  #             - properties:
+  #                 message:
+  #                   example: "User not found"
+  #                 message_code:
+  #                   example: "USER_ITEM_NOT_FOUND"
+  #       "422":
+  #         description: "Invalid Object Id"
+  #         schema:
+  #           $ref: "#/definitions/InvalidIdErrorResponse"
+  #       "500":
+  #         description: "Internal Server Error"
+  #         schema:
+  #           $ref: "#/definitions/InternalErrorResponse"
+  #   delete:
+  #     tags:
+  #       - "Users"
+  #     summary: "Delete User by ID"
+  #     description: "Returns a deleted role"
+  #     consumes:
+  #       - "application/json"
+  #     produces:
+  #       - "application/json"
+  #     parameters:
+  #       - name: "UserID"
+  #         in: "path"
+  #         description: "ID of user to delete"
+  #         required: true
+  #         type: integer
+  #         format: integer
+  #     responses:
+  #       "200":
+  #         description: "User successfully deleted"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/Response"
+  #             - properties:
+  #                 data:
+  #                   $ref: "#/definitions/UserGet"
+  #                 message:
+  #                   example: "User successfully deleted"
+  #                 message_code:
+  #                   example: "USER_SUCCESSFULLY_DELETED"
+  #       "404":
+  #         description: "User not found"
+  #         schema:
+  #           allOf:
+  #             - $ref: "#/definitions/ErrorResponse"
+  #             - properties:
+  #                 message:
+  #                   example: "User not found"
+  #                 message_code:
+  #                   example: "USER_ITEM_NOT_FOUND"
+  #       "422":
+  #         description: "Invalid Object Id"
+  #         schema:
+  #           $ref: "#/definitions/InvalidIdErrorResponse"
+  #       "500":
+  #         description: "Internal Server Error"
+  #         schema:
+  #           $ref: "#/definitions/InternalErrorResponse"
   /role:
     get:
       tags:

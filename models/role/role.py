@@ -1,25 +1,23 @@
 import logging
 from utils.encryption_utils import EncryptionUtil
-from models.rol.db_queries import __dbmanager__
+from models.role.db_queries import __dbmanager__
 from datetime import datetime
 import pytz
+from models.role.db_queries import db_find_active_roles
 
-class RolModel:
-    def __init__(self, name, description, permissions,creation_date,mod_date,is_active,default_role,screens,app, status=None, verification_code=None, expiration_time=None, _id=None):
+class RoleModel:
+    def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, app, _id=None):
         self.name = name
         self.description = description
-        self.permissions = permissions if permissions else []
-        self.creation_date = (
-            creation_date 
-            if creation_date 
-            else datetime.now(pytz.timezone("America/Costa_Rica")).replace(tzinfo=None)
-        )
-        self.mod_date = mod_date       
+        self.permissions = permissions
+        self.creation_date = creation_date
+        self.mod_date = mod_date
         self.is_active = is_active
         self.default_role = default_role
-        self.screens = screens if screens else []
+        self.screens = screens
         self.app = app
-    
+        self._id = _id
+
     def to_dict(self):
         return {
             'name': self.name,
@@ -29,10 +27,18 @@ class RolModel:
             'mod_date': self.mod_date,
             'is_active': self.is_active,
             'default_role': self.default_role,
-            'screens':self.screens,
-            'app': self.app
+            'screens': self.screens,
+            'app': self.app,
+            '_id': self._id
         }
-
+    
+    @classmethod
+    def find_active_roles(cls):
+        try:
+            roles = db_find_active_roles()
+            return roles
+        except Exception as e:
+            raise Exception('Error finding active roles')
     @classmethod
     def get_by_name(cls, name):
         try:
@@ -54,3 +60,4 @@ class RolModel:
         except Exception as ex:
             logging.exception(ex)
             raise Exception("Failed to get rol by name: " + str(ex))
+    

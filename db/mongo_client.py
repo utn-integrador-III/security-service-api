@@ -67,4 +67,12 @@ class Connection:
             else:
                 return False
         except Exception as e:
-            raise Exception(e)
+            return e
+    
+    def find_by_email(self, email):
+        try:
+            return self.collection.find_one({'email': email})
+        except Exception as e:
+            logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
+            raise
+        

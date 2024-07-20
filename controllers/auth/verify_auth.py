@@ -1,11 +1,9 @@
 from flask_restful import Resource, reqparse
 from models.auth.auth import UserModel
 from utils.server_response import StatusCode, ServerResponse
-from utils.auth_manager import auth_required
-import requests
-from decouple import config
+from utils.jwt_manager import validate_jwt
 from flask import request
-from utils.jwt_manager import validate_jwt, get_jwt_identity
+
 class AuthController(Resource):
     route = '/auth/verify_auth'
 
@@ -21,18 +19,11 @@ class AuthController(Resource):
         roles = validate_jwt(token)
 
         if roles is None:
-            return ServerResponse(message="User Not valid", message_code="USER_NOT_FOUND", status=StatusCode.BAD_REQUEST)
-
-
-        body= {'name': roles}
-        response = requests.get(config('AUTH_API_URL') + config('AUTH_API_PORT') + '/role', json=body)
+            return ServerResponse(message="User Not valid", message_code="USER_NOT_FOUND", status=StatusCode.BAD_REQUEST).to_response()
         
-        return {
-            'data': {
-                "rol": response['name'],
-                "permissions": response['permissions'],
-                "screens": response['screens']
-            },
-            'message': "User has been authenticated",
-            'message_code': "USER_AUTHENTICATED"
-        }, StatusCode.OK
+        return ServerResponse(
+            data={"rolName": roles},
+            message="User is valid",
+            message_code="USER_AUTHENTICATED",
+            status=StatusCode.OK
+        ).to_response()

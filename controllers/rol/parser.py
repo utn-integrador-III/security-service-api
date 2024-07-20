@@ -6,7 +6,7 @@ class RolParser:
     def parse_put_request():
         parser = reqparse.RequestParser()
 
-        parser.add_argument('_id', type=str, required=True, help="ID of the lost object is required")
+        parser.add_argument('_id', type=str, required=False, help="ID of the lost object is required")
         parser.add_argument('name', type=str, required=False)
         parser.add_argument('description', type=str, required=False)
         parser.add_argument('permissions', type=list,location='json', required=False)
