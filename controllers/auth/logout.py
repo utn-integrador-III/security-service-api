@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from models.auth.logout import LogoutModel
+from models.user.user import UserModel
 from utils.server_response import StatusCode, ServerResponse
 from utils.auth_manager import auth_required
 
@@ -13,12 +13,12 @@ class LogoutController(Resource):
 
         email = args['email']
 
-        user = LogoutModel.find_by_email(email)
+        user = UserModel.find_by_email(email)
 
         if not user:
             return ServerResponse(message="The user does not exist", message_code="INVALID_CREDENTIALS", status=StatusCode.BAD_REQUEST)
         
-        LogoutModel.logout_user(email)
+        UserModel.logout_user(email)
 
         return {
             'message': "User has been logged out",
