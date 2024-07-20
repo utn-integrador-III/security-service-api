@@ -22,6 +22,13 @@ class Connection:
             return e
         return result
 
+    def get_by_query(self, query):
+        try:
+            result = self.collection.find(query)
+        except Exception as e:
+            return e
+        return result
+
     def get_by_id(self, id):
         try:
             result = self.collection.find({'id':id})
@@ -35,11 +42,20 @@ class Connection:
         except Exception as e:
             return e
 
-    def update_data(self, id, new_deal_data):
+    def update_data(self, id, new_data):
         try:
             self.collection.update_one(
                 {"id": id},
-                {"$set": new_deal_data}
+                {"$set": new_data}
+            )
+        except Exception as e:
+            return e
+        
+    def update_by_condition(self, condition, new_data):
+        try:
+            self.collection.update_one(
+                condition,
+                {"$set": new_data}
             )
         except Exception as e:
             return e
