@@ -30,7 +30,7 @@ class UserPasswordController(Resource):
                     message="All fields are required: user_email, old_password, new_password, confirm_password",
                     message_code=MISSING_REQUIRED_FIELDS,
                     status=StatusCode.BAD_REQUEST
-                )
+                ).to_response()
 
             # Buscar usuario por email
             user = UserModel.find_by_email(user_email)
@@ -39,7 +39,7 @@ class UserPasswordController(Resource):
                     message="User not found",
                     message_code=USER_NOT_FOUND,
                     status=StatusCode.NOT_FOUND
-                )
+                ).to_response()
 
             # Verificar estado del usuario
             if user['status'] != 'Active':
@@ -47,16 +47,16 @@ class UserPasswordController(Resource):
                     message="User is not active",
                     message_code=USER_NOT_ACTIVE,
                     status=StatusCode.FORBIDDEN
-                )
+                ).to_response()
 
             # Verificar contraseña antigua
             encryption_util = EncryptionUtil()
-            if not UserModel.verify_password(old_password, user['password']):
+            if not UserModel.verify_old_password(old_password, user['password']):
                 return ServerResponse(
                     message="Old password is incorrect",
                     message_code=INVALID_OLD_PASSWORD,
                     status=StatusCode.UNAUTHORIZED
-                )
+                ).to_response()
 
             # Validar nueva contraseña
             validation_message = validate_password(new_password)
@@ -64,14 +64,14 @@ class UserPasswordController(Resource):
                 return ServerResponse(
                     message=validation_message,
                     status=StatusCode.BAD_REQUEST
-                )
+                ).to_response()
 
             if new_password != confirm_password:
                 return ServerResponse(
                     message="New password and confirm password do not match",
                     message_code=PASSWORDS_DO_NOT_MATCH,
                     status=StatusCode.BAD_REQUEST
-                )
+                ).to_response()
 
             # Encriptar nueva contraseña
             encrypted_password = encryption_util.encrypt(new_password)
@@ -83,7 +83,7 @@ class UserPasswordController(Resource):
                 message="Password updated successfully",
                 message_code=PASSWORD_UPDATED_SUCCESSFULLY,
                 status=StatusCode.OK
-            )
+            ).to_response()
 
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}", exc_info=True)
@@ -91,4 +91,4 @@ class UserPasswordController(Resource):
                 message="An unexpected error occurred.",
                 message_code=UNEXPECTED_ERROR_OCCURRED,
                 status=StatusCode.INTERNAL_SERVER_ERROR
-            )
+            ).to_response()

@@ -66,6 +66,12 @@ class UserModel:
              __dbmanager__.update_by_condition({'email': email}, {'token': '', 'is_session_active': False})
         except Exception as e:
             raise Exception(f"Error logging out user: {str(e)}")
+    
+    @staticmethod
+    def verify_password(input_password, stored_password):
+        encryption_util = EncryptionUtil()   
+        decrypted_stored_password = encryption_util.decrypt(stored_password)
+        return input_password == decrypted_stored_password
 
     @classmethod
     def update_password(cls, email, new_password):
