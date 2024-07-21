@@ -36,8 +36,9 @@ definitions:
     type: object
     properties:
       data:
-        type: string
-        example: null
+        type: array
+        items:
+          $ref: "#/definitions"
       message:
         type: string
         example: "Successfully requested"
@@ -90,10 +91,9 @@ definitions:
       status:
         type: string
         example: "Active"
-      role_id:
-        type: array
-        items:
-          $ref: "#/definitions/role_idResponse"
+      role:
+        type: string
+        example: "Admin"
       token:
         type: string
         example: "394FDJ347SL34"
@@ -126,21 +126,21 @@ definitions:
       _id:
         type: string
         example: "YRH347&%HF"
-      UserID:
-        type: integer
-        example: 1
       name:
         type: string
         example: "John Allen Valerin"
       password:
         type: string
-        example: "484UTN"
+        example: "ueI#kdKSLjIEKSI##"
       email:
         type: string
         example: "jhonallen@est.utn.ac.cr"
       status:
         type: string
-        example: Active
+        example: Pending
+      verification_code:
+        type: string
+        example: "373483"
   UserGetById:
     type: object
     properties:
@@ -167,9 +167,6 @@ definitions:
       email:
         type: string
         example: "jhonallen@est.utn.ac.cr"
-      role:
-        type: string
-        example: "Lost-Property/Member"
   RoleGet:
     type: object
     properties:
@@ -248,36 +245,20 @@ paths:
       produces:
         - "application/json"
       responses:
-        "200":
-          description: "Authentication Successfully"
+       "200":
+          description: "Get user information once logged in"
           schema:
-            type: object
-            properties:
-              data:
-                type: object
-                properties:
-                  email:
-                    type: string
-                    example: "emrodriguezso@est.utn.ac.cr"
-                  name:
-                    type: string
-                    example: "Emmanuel Rodriguez"
-                  status:
-                    type: string
-                    example: "Active"
-                  role:
-                    type: string
-                    example: "Lost-Property/Member"
-                  token:
-                    type: string
-                    example: "394FDJ347SL34"
-              message:
-                type: string
-                example: "User has been authenticated"
-              message_code:
-                type: string
-                example: "USER_AUTHENTICATED"
-        "400":
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  data:
+                    items:
+                      $ref: "#/definitions/AuthGet"
+                  message:
+                    example: "User has been authenticated"
+                  message_code:
+                    example: "USER_AUTHENTICATED"
+       "400":
           description: "Unprocessable Entity - Validation Errors"
           schema:
             type: object
@@ -296,7 +277,7 @@ paths:
                   - "INVALID_CREDENTIALS"
                   - "USER_NOT_ACTIVE"
                 example: "INVALID_EMAIL_DOMAIN"
-        "500":
+       "500":
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
@@ -316,21 +297,7 @@ paths:
           description: "User object that needs to be created"
           required: true
           schema:
-            type: "object"
-            properties:
-              email:
-                type: "string"
-                format: "email"
-              password:
-                type: "string"
-                format: "password"
-              name:
-                type: "string"
-                format: "name"
-            example:
-              name: "Christopher Carmona"
-              password: "mypassword123"
-              email: "chcamonael@est.utn.ac.cr"
+            $ref: '#/definitions/UserPost'
       responses:
         "201":
           description: "User successfully created"
@@ -338,6 +305,8 @@ paths:
             allOf:
               - $ref: "#/definitions/Response"
               - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
                   message:
                     example: "User created successfully"
                   message_code:
@@ -673,7 +642,28 @@ paths:
                     example: "Successfully requested"
                   message_code:
                     example: "OK_MSG"
-
+        "400":
+          description: "Bad Request"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
+                  message:
+                    example: "Server Couldn't Process the Request"
+                  message_code:
+                    example: "BAD_REQUEST"
+        "404":
+          description: "Role Not Found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Role not found"
+                  message_code:
+                    example: "NOT_FOUND"
         "500":
           description: "Internal Server Error"
           schema:
@@ -682,6 +672,11 @@ paths:
       tags:
         - "Roles"
       parameters:
+        - name: Authorization
+          in: header
+          description: An authorization header
+          required: true
+          type: string
         - in: "body"
           name: "body"
           description: "Role object that needs to be added"
@@ -696,7 +691,7 @@ paths:
         - "application/json"
       responses:
         "201":
-          description: "Role succesfully created"
+          description: "Role successfully created"
           schema:
             allOf:
               - $ref: "#/definitions/Response"
@@ -707,6 +702,18 @@ paths:
                     example: "Role successfully created"
                   message_code:
                     example: "ROLE_SUCCESSFULLY_CREATED"
+        "400":
+          description: "Bad Request"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserGet"
+                  message:
+                    example: "Server Couldn't Process the Request"
+                  message_code:
+                    example: "BAD_REQUEST"
         "409":
           description: "Role already exists"
           schema:
@@ -775,6 +782,11 @@ paths:
       produces:
         - "application/json"
       parameters:
+        - name: Authorization
+          in: header
+          description: An authorization header
+          required: true
+          type: string
         - name: "RoleId"
           in: "path"
           description: "ID of role to delete"
@@ -816,12 +828,11 @@ paths:
       tags:
         - "Roles"
       parameters:
-        - name: "RoleId"
-          in: "path"
-          description: "ID of role to update"
+        - name: Authorization
+          in: header
+          description: An authorization header
           required: true
-          type: "integer"
-          format: "integer"
+          type: string
         - in: "body"
           name: "body"
           description: "Role object that needs to be updated"
@@ -847,11 +858,20 @@ paths:
                     example: "Role successfully updated"
                   message_code:
                     example: "ROLE_SUCCESSFULLY_UPDATED"
+        "404":
+          description: "No Role found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Role not found"
+                  message_code:
+                    example: "NOT_FOUND"        
         "500":
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-
         "422":
           description: "Invalid Id"
           schema:

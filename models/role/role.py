@@ -14,6 +14,20 @@ class RoleModel:
         self.screens = screens
         self.app = app
         self._id = _id
+        
+    def to_dict(self):
+        return {
+            "_id": self._id,
+            "name": self.name,
+            "description": self.description,
+            "permissions": self.permissions,
+            "creation_date": self.creation_date,
+            "mod_date": self.mod_date,
+            "is_active": self.is_active,
+            "default_role": self.default_role,
+            "screens": self.screens,
+            "app": self.app
+        }
 
     @classmethod
     def find_active_and_default_roles(cls):

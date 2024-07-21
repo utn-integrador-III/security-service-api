@@ -40,12 +40,12 @@ class LoginController(Resource):
                 "email": user['email'],
                 "name": user['name'],
                 "status": user['status'],
-                "role": user['role'],
+                "role": user['roles'],
                 "token": token
             },
             'message': "User has been authenticated",
             'message_code': "USER_AUTHENTICATED"
-        }, StatusCode.OK
+        }
 
         return ServerResponse(
             data=response_data['data'],
