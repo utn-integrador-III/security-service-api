@@ -8,7 +8,7 @@ from models.user.user import UserModel
 from models.role.role import RoleModel
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
-    CREATED, INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, NO_ACTIVE_ROLES_FOUND, DEFAULT_ROLE_NOT_FOUND, USER_CREATION_ERROR, UNEXPECTED_ERROR, USER_SUCCESSFULLY_CREATED
+    CREATED, INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, NO_ACTIVE_ROLES_FOUND, DEFAULT_ROLE_NOT_FOUND, USER_CREATION_ERROR, UNEXPECTED_ERROR
 )
 
 class UserEnrollmentController(Resource):
@@ -93,7 +93,7 @@ class UserEnrollmentController(Resource):
                     'status': 'Pending',
                     'verification_code': verification_code,
                     'expiration_code': expiration_code,
-                    'role': default_role['name'], 
+                    'role': default_role['name'].lower().strip(), 
                     'token': "",
                     'is_session_active': False
                 }
@@ -101,8 +101,8 @@ class UserEnrollmentController(Resource):
                 new_user = UserModel.create_user(user_data)
                 
                 return ServerResponse(
-                    message="User succesfully created",
-                    message_code=USER_SUCCESSFULLY_CREATED,
+                    message="User created successfully",
+                    message_code=CREATED,
                     status=StatusCode.CREATED,
                 )
             except Exception as e:
