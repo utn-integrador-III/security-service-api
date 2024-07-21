@@ -36,9 +36,8 @@ definitions:
     type: object
     properties:
       data:
-        type: array
-        items:
-          $ref: "#/definitions"
+        type: string
+        example: null
       message:
         type: string
         example: "Successfully requested"
@@ -106,7 +105,7 @@ definitions:
     properties:
       email:
         type: string
-        example: "semataoe@es.utn.ac.cr"
+        example: "emrodriguezso@es.utn.ac.cr"
       password:
         type: string
         example: "47IR39Rt38"
@@ -154,11 +153,11 @@ definitions:
   UserPost:
     type: object
     required:
-      - "UserID"
+      - "name"
+      - "email"
+      - "password"
+      - "role"
     properties:
-      UserID:
-        type: integer
-        example: 1
       name:
         type: string
         example: "John Allen Valerin"
@@ -168,9 +167,9 @@ definitions:
       email:
         type: string
         example: "jhonallen@est.utn.ac.cr"
-      status:
+      role:
         type: string
-        example: Active
+        example: "Lost-Property/Member"
   RoleGet:
     type: object
     properties:
@@ -238,7 +237,7 @@ paths:
       parameters:
         - in: "body"
           name: "body"
-          description: "Post Method to authenticate user with email&password"
+          description: "Post Method to authenticate user with email and password"
           required: true
           schema:
             $ref: "#/definitions/AuthPost"
@@ -249,28 +248,54 @@ paths:
       produces:
         - "application/json"
       responses:
-        "201":
-          description: "Authentication Succesfully"
+        "200":
+          description: "Authentication Successfully"
           schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/AuthGet"
-                  message:
-                    example: "Authentication succeed"
-                  message_code:
-                    example: "AUTH_SUCCEED"
-        "409":
-          description: "Credentials did not match"
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: "emrodriguezso@est.utn.ac.cr"
+                  name:
+                    type: string
+                    example: "Emmanuel Rodriguez"
+                  status:
+                    type: string
+                    example: "Active"
+                  role:
+                    type: string
+                    example: "Lost-Property/Member"
+                  token:
+                    type: string
+                    example: "394FDJ347SL34"
+              message:
+                type: string
+                example: "User has been authenticated"
+              message_code:
+                type: string
+                example: "USER_AUTHENTICATED"
+        "400":
+          description: "Unprocessable Entity - Validation Errors"
           schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User has been authenticated"
-                  message_code:
-                    example: "USER_AUTHENTICATED"
+            type: object
+            properties:
+              message:
+                type: string
+                enum:
+                  - "Invalid email domain"
+                  - "Invalid email or password"
+                  - "User is not active"
+                example: "Invalid email domain"
+              message_code:
+                type: string
+                enum:
+                  - "INVALID_EMAIL_DOMAIN"
+                  - "INVALID_CREDENTIALS"
+                  - "USER_NOT_ACTIVE"
+                example: "INVALID_EMAIL_DOMAIN"
         "500":
           description: "Internal Server Error"
           schema:
@@ -279,8 +304,8 @@ paths:
     post:
       tags:
         - "Users"
-      summary: "Enroll a new user"
-      description: "Enroll a new user"
+      summary: "Create a User"
+      description: "Create a user account with the provided details."
       consumes:
         - "application/json"
       produces:
@@ -288,7 +313,7 @@ paths:
       parameters:
         - in: "body"
           name: "body"
-          description: "User enrollment object"
+          description: "User object that needs to be created"
           required: true
           schema:
             type: "object"
@@ -299,33 +324,77 @@ paths:
               password:
                 type: "string"
                 format: "password"
+              name:
+                type: "string"
+                format: "name"
             example:
               name: "Christopher Carmona"
               password: "mypassword123"
               email: "chcamonael@est.utn.ac.cr"
       responses:
         "201":
-          description: "User successfully enrolled"
+          description: "User successfully created"
           schema:
             allOf:
               - $ref: "#/definitions/Response"
               - properties:
-                  data:
-                    $ref: "#/definitions/AuthGet"
                   message:
-                    example: "User successfully enrolled"
+                    example: "User created successfully"
                   message_code:
-                    example: "USER_SUCCESSFULLY_ENROLLED"
-        "409":
-          description: "User already exists"
+                    example: "USER_SUCCESSFULLY_CREATED"
+        "400":
+          description: "Bad Request - Invalid request format or missing fields"
           schema:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
               - properties:
                   message:
-                    example: "User already enrolled"
+                    example: "The request format is invalid or required fields are missing"
                   message_code:
-                    example: "USER_ALREADY_ENROLLED"
+                    example: "BAD_REQUEST"
+        "409":
+          description: "Conflict - User already exists"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "The user is already registered"
+                  message_code:
+                    example: "USER_ALREADY_REGISTERED"
+        "422":
+          description: "Unprocessable Entity - Validation Errors"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "The provided email is not valid"
+                  message_code:
+                    example: "INVALID_EMAIL_DOMAIN"
+            type: object
+            properties:
+              message:
+                type: string
+                enum:
+                  - "The provided email is not valid"
+                  - "The entered domain does not meet the established standards"
+                  - "The name does not meet the established standards"
+                  - "The password does not meet the established standards"
+                  - "No active roles found"
+                  - "Default role not found"
+                  - "The provided role is not valid: role_name"
+                example: "The provided email is not valid"
+              message_code:
+                type: string
+                enum:
+                  - "INVALID_EMAIL_DOMAIN"
+                  - "INVALID_NAME"
+                  - "INVALID_PASSWORD"
+                  - "NO_ACTIVE_ROLES_FOUND"
+                  - "DEFAULT_ROLE_NOT_FOUND"
+                  - "INVALID_ROLE"
+                example: "INVALID_EMAIL_DOMAIN"
         "500":
           description: "Internal Server Error"
           schema:

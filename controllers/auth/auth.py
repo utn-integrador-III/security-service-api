@@ -1,5 +1,5 @@
 from flask_restful import Resource, reqparse
-from models.auth.auth import UserModel
+from models.user.user import UserModel
 from utils.server_response import StatusCode, ServerResponse
 from utils.jwt_manager import generate_jwt
 
@@ -40,12 +40,12 @@ class LoginController(Resource):
                 "email": user['email'],
                 "name": user['name'],
                 "status": user['status'],
-                "role_id": user['roles'],
+                "role": user['role'],
                 "token": token
             },
             'message': "User has been authenticated",
             'message_code': "USER_AUTHENTICATED"
-        }
+        }, StatusCode.OK
 
         return ServerResponse(
             data=response_data['data'],
