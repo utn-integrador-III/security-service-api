@@ -25,15 +25,15 @@ class UserModel:
     @classmethod
     def create_user(cls, user_data):
         try:
-            # Encriptar la contraseña
+            # Encrypt password
             encryption_util = EncryptionUtil()
             user_data['password'] = encryption_util.encrypt(user_data['password'])
             
-            # Insertar el usuario en la base de datos
+            # Insert the user in the database
             result = __dbmanager__.create_data(user_data)
             
             if result:
-                # Crear instancia de UserModel con los campos esperados
+                # Create UserModel instance with expected fields
                 return cls(
                     name=user_data['name'],
                     password=user_data['password'],
@@ -49,13 +49,23 @@ class UserModel:
             logging.error(f"Error creating user: {str(e)}", exc_info=True)
             raise Exception('Error creating user')
 
+     
     @staticmethod
     def find_by_email(email):
         try:
-            return __dbmanager__.find_by_email(email)
+            user = __dbmanager__.find_by_email(email)
+            if user:
+                user['id'] = str(user.pop('_id'))  # Convert ObjectId to string and assign it to 'id'
+            return user
         except Exception as e:
-            logging.error(f"Error finding user by email: {str(e)}", exc_info=True)
-            raise Exception('Error finding user by email')
+            raise Exception(f"Error in find_by_email: {str(e)}")
+        
+    @staticmethod
+    def logout_user(email):
+        try:
+             __dbmanager__.update_by_condition({'email': email}, {'token': '', 'is_session_active': False})
+        except Exception as e:
+            raise Exception(f"Error logging out user: {str(e)}")
 
     @classmethod
     def update_password(cls, email, new_password):
@@ -66,6 +76,6 @@ class UserModel:
             raise Exception('Error updating password')
         
     @staticmethod
-    def verify_password(plain_password, encrypted_password):
+    def verify_old_password(plain_password, encrypted_password):
         encryption_util = EncryptionUtil()
-        return encryption_util.verify_password(plain_password, encrypted_password)
+        return encryption_util.verify_old_password(plain_password, encrypted_password)

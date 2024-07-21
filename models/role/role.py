@@ -1,3 +1,8 @@
+import logging
+from utils.encryption_utils import EncryptionUtil
+from models.role.db_queries import __dbmanager__
+from datetime import datetime
+import pytz
 from models.role.db_queries import db_find_active_roles
 
 class RoleModel:
@@ -34,3 +39,25 @@ class RoleModel:
             return roles
         except Exception as e:
             raise Exception('Error finding active roles')
+    @classmethod
+    def get_by_name(cls, name):
+        try:
+            result = __dbmanager__.find_one({"name": name})
+            if result:
+                return cls(
+                    _id=result.get("_id"),
+                    name=result.get("name"),
+                    description=result.get("description"),
+                    permissions=result.get("permissions"),
+                    creation_date=result.get("creation_date"),
+                    mod_date=result.get("mod_date"),
+                    is_active=result.get("is_active"),
+                    default_role=result.get("default_role"),
+                    screens=result.get("screens"),
+                    app=result.get("app")
+                )
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to get rol by name: " + str(ex))
+    
