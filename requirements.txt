@@ -10,8 +10,7 @@ pytest
 python-decouple==3.4
 gunicorn==20.1.0
 cryptography
-Pyjwt
+PyJWT
 email_validator
-jwt
 validate_email
 python-dateutil

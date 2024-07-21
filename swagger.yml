@@ -231,7 +231,7 @@ definitions:
         example: True
 #The paths are the ones with all the information of the CRUD methods of the end-points
 paths:
-  /Auth:
+  /auth/login:
     post:
       tags:
         - "Auth"
@@ -330,7 +330,6 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-
   /auth/logout:
     put:
       tags:
@@ -373,6 +372,7 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
+  
   # /user:
   #   get:
   #     tags:
