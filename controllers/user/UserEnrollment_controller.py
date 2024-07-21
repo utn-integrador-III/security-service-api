@@ -93,7 +93,7 @@ class UserEnrollmentController(Resource):
                     'status': 'Pending',
                     'verification_code': verification_code,
                     'expiration_code': expiration_code,
-                    'role': default_role['name'].lower().strip(), 
+                    'role': default_role['name'], 
                     'token': "",
                     'is_session_active': False
                 }
