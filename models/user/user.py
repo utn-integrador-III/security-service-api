@@ -56,3 +56,16 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error finding user by email: {str(e)}", exc_info=True)
             raise Exception('Error finding user by email')
+
+    @classmethod
+    def update_password(cls, email, new_password):
+        try:
+            __dbmanager__.update_password(email, new_password)
+        except Exception as e:
+            logging.error(f"Error updating password: {str(e)}", exc_info=True)
+            raise Exception('Error updating password')
+        
+    @staticmethod
+    def verify_password(plain_password, encrypted_password):
+        encryption_util = EncryptionUtil()
+        return encryption_util.verify_password(plain_password, encrypted_password)
