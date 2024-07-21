@@ -1,5 +1,4 @@
-from models.role.db_queries import db_find_active_roles, db_find_default_role
-
+from models.role.db_queries import db_find_active_and_default_roles
 
 class RoleModel:
     def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, app, _id=None):
@@ -15,21 +14,10 @@ class RoleModel:
         self._id = _id
 
     @classmethod
-    def find_active_roles(cls):
-        # Example implementation to find active roles from the database
+    def find_active_and_default_roles(cls):
+        # Fetch active roles and the default role from the database
         try:
-            # Assume db_find_active_roles fetches active roles from the database
-            roles = db_find_active_roles()
-            return roles
+            roles, default_role = db_find_active_and_default_roles()
+            return roles, default_role
         except Exception as e:
-            raise Exception('Error finding active roles')
-
-    @classmethod
-    def find_default_role(cls):
-        # Fetch the default role from the database
-        try:
-            # Example database call to find the default role
-            default_role = db_find_default_role()
-            return default_role
-        except Exception as e:
-            raise Exception('Error finding default role')
+            raise Exception('Error finding active and default roles')

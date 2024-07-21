@@ -1,6 +1,6 @@
 import logging
 from utils.encryption_utils import EncryptionUtil
-from models.user.db_queries import __dbmanager__, find_user_by_email
+from models.user.db_queries import __dbmanager__
 
 class UserModel:
     def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):

@@ -3,17 +3,21 @@ from decouple import config
 
 __dbmanager__ = Connection(config('ROLE_COLLECTION'))
 
-def db_find_active_roles():
+def db_find_active_and_default_roles():
     try:
-        roles_cursor = __dbmanager__.collection.find({'is_active': True})
-        roles_list = list(roles_cursor)
-        return roles_list
+        roles_cursor = __dbmanager__.collection.find({
+            'is_active': True,
+            '$or': [{'default_role': {'$exists': True}}, {'default_role': True}]
+        })
+        
+        roles_list = []
+        default_role = None
+        
+        for role in roles_cursor:
+            roles_list.append(role)
+            if role.get('default_role'):
+                default_role = role
+        
+        return roles_list, default_role
     except Exception as e:
-        raise RuntimeError(f'Error finding active roles: {str(e)}')
-    
-def db_find_default_role():
-    try:
-        default_role = __dbmanager__.collection.find_one({'default_role': True})
-        return default_role
-    except Exception as e:
-        raise RuntimeError(f'Error finding default role: {str(e)}')
+        raise RuntimeError(f'Error al buscar roles activos y predeterminados: {str(e)}')

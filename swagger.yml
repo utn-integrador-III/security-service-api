@@ -304,8 +304,8 @@ paths:
     post:
       tags:
         - "Users"
-      summary: "User created successfully"
-      description: "Create a User"
+      summary: "Create a User"
+      description: "Create a user account with the provided details."
       consumes:
         - "application/json"
       produces:
@@ -313,7 +313,7 @@ paths:
       parameters:
         - in: "body"
           name: "body"
-          description: "User object that needs to be added"
+          description: "User object that needs to be created"
           required: true
           schema:
             type: "object"
@@ -327,18 +327,13 @@ paths:
               name:
                 type: "string"
                 format: "name"
-              role:
-                type: "string"
-                format: "role"
             example:
               name: "Christopher Carmona"
               password: "mypassword123"
               email: "chcamonael@est.utn.ac.cr"
-              role: "Lost-Property/Member"
-
       responses:
         "201":
-          description: "User created successfully"
+          description: "User successfully created"
           schema:
             allOf:
               - $ref: "#/definitions/Response"
@@ -346,19 +341,19 @@ paths:
                   message:
                     example: "User created successfully"
                   message_code:
-                    example: "CREATED"
+                    example: "USER_SUCCESSFULLY_CREATED"
         "400":
-          description: "Invalid credentials or user does not exist"
+          description: "Bad Request - Invalid request format or missing fields"
           schema:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
               - properties:
                   message:
-                    example: "Invalid input"
+                    example: "The request format is invalid or required fields are missing"
                   message_code:
-                    example: "INVALID_INPUT"
+                    example: "BAD_REQUEST"
         "409":
-          description: "Conflic (User already exists)"
+          description: "Conflict - User already exists"
           schema:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
@@ -370,6 +365,13 @@ paths:
         "422":
           description: "Unprocessable Entity - Validation Errors"
           schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "The provided email is not valid"
+                  message_code:
+                    example: "INVALID_EMAIL_DOMAIN"
             type: object
             properties:
               message:
@@ -380,7 +382,7 @@ paths:
                   - "The name does not meet the established standards"
                   - "The password does not meet the established standards"
                   - "No active roles found"
-                  - "No valid role names found"
+                  - "Default role not found"
                   - "The provided role is not valid: role_name"
                 example: "The provided email is not valid"
               message_code:
@@ -389,9 +391,10 @@ paths:
                   - "INVALID_EMAIL_DOMAIN"
                   - "INVALID_NAME"
                   - "INVALID_PASSWORD"
+                  - "NO_ACTIVE_ROLES_FOUND"
+                  - "DEFAULT_ROLE_NOT_FOUND"
                   - "INVALID_ROLE"
                 example: "INVALID_EMAIL_DOMAIN"
-
         "500":
           description: "Internal Server Error"
           schema:
