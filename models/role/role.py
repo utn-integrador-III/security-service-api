@@ -1,9 +1,6 @@
+from models.role.db_queries import db_find_active_and_default_roles
 import logging
-from utils.encryption_utils import EncryptionUtil
 from models.role.db_queries import __dbmanager__
-from datetime import datetime
-import pytz
-from models.role.db_queries import db_find_active_roles
 
 class RoleModel:
     def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, app, _id=None):
@@ -18,27 +15,15 @@ class RoleModel:
         self.app = app
         self._id = _id
 
-    def to_dict(self):
-        return {
-            'name': self.name,
-            'description': self.description,
-            'permissions': self.permissions,
-            'creation_date': self.creation_date,
-            'mod_date': self.mod_date,
-            'is_active': self.is_active,
-            'default_role': self.default_role,
-            'screens': self.screens,
-            'app': self.app,
-            '_id': self._id
-        }
-    
     @classmethod
-    def find_active_roles(cls):
+    def find_active_and_default_roles(cls):
+        # Fetch active roles and the default role from the database
         try:
-            roles = db_find_active_roles()
-            return roles
+            roles, default_role = db_find_active_and_default_roles()
+            return roles, default_role
         except Exception as e:
-            raise Exception('Error finding active roles')
+            raise Exception('Error finding active and default roles')
+
     @classmethod
     def get_by_name(cls, name):
         try:

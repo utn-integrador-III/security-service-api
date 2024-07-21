@@ -3,14 +3,16 @@ from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__
 
 class UserModel:
-    def __init__(self, name, password, email, status, verification_code, expiration_code, roles):
+    def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
         self.name = name
         self.password = password
         self.email = email
         self.status = status
         self.verification_code = verification_code
         self.expiration_code = expiration_code
-        self.roles = roles
+        self.role = role
+        self.token = token
+        self.is_session_active = is_session_active
     
     def to_dict(self):
         return {
@@ -19,7 +21,10 @@ class UserModel:
             'password': self.password,
             'status': self.status,
             'verification_code': self.verification_code,
-            'expiration_code': self.expiration_code
+            'expiration_code': self.expiration_code,
+            'role': self.role,
+            'token': self.token,
+            'is_session_active': self.is_session_active
         }
     
     @classmethod
@@ -41,7 +46,9 @@ class UserModel:
                     status=user_data['status'],
                     verification_code=user_data['verification_code'],
                     expiration_code=user_data['expiration_code'],
-                    roles=user_data['roles']
+                    role=user_data['role'],
+                    token=user_data['token'],
+                    is_session_active=user_data['is_session_active']
                 )
             else:
                 raise Exception("Failed to create user in database")
@@ -66,12 +73,13 @@ class UserModel:
              __dbmanager__.update_by_condition({'email': email}, {'token': '', 'is_session_active': False})
         except Exception as e:
             raise Exception(f"Error logging out user: {str(e)}")
-    
+
     @staticmethod
     def verify_password(input_password, stored_password):
         encryption_util = EncryptionUtil()   
         decrypted_stored_password = encryption_util.decrypt(stored_password)
         return input_password == decrypted_stored_password
+
 
     @classmethod
     def update_password(cls, email, new_password):
@@ -85,3 +93,4 @@ class UserModel:
     def verify_old_password(plain_password, encrypted_password):
         encryption_util = EncryptionUtil()
         return encryption_util.verify_old_password(plain_password, encrypted_password)
+
