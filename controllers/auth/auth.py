@@ -33,14 +33,14 @@ class LoginController(Resource):
             return ServerResponse(message="User is not active", message_code="USER_NOT_ACTIVE", status=StatusCode.BAD_REQUEST).to_response()
 
         # Generar el JWT
-        token = generate_jwt(user['roles'])
+        token = generate_jwt(user['role'])
         
         response_data = {
             'data': {
                 "email": user['email'],
                 "name": user['name'],
                 "status": user['status'],
-                "role": user['roles'],
+                "role": user['role'],
                 "token": token
             },
             'message': "User has been authenticated",
