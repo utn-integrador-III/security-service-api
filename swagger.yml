@@ -38,7 +38,7 @@ definitions:
       data:
         type: array
         items:
-          $ref: "#/definitions"
+          $ref: "#/definitions/RoleGet"
       message:
         type: string
         example: "Successfully requested"
@@ -176,6 +176,9 @@ definitions:
       name:
         type: string
         example: "Admin"
+      description:
+        type: string
+        example: "User Admin"
       permissions:
         type: array
         items:
@@ -184,6 +187,7 @@ definitions:
           - "read"
           - "write"
           - "delete"
+          - "update"
       creation_date:
         type: object
         example:
@@ -195,6 +199,17 @@ definitions:
       is_active:
         type: boolean
         example: True
+      default_role:
+        type: boolean
+        example: True
+      screens:
+        type: array
+        items:
+          type: string
+        example:
+          - "LostObject/Report"
+          - "Lab/BookingComputer"
+          - "Lab/Issue"
   RolePost:
     type: object
     required:
@@ -516,14 +531,6 @@ paths:
           schema:
             allOf:
               - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/RoleGet"
-                  message:
-                    example: "Successfully requested"
-                  message_code:
-                    example: "OK_MSG"
         "400":
           description: "Bad Request"
           schema:
