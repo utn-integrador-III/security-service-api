@@ -1,4 +1,5 @@
 from flask_restful import Api
+from controllers.user.UserPasswordController import UserPasswordController
 from controllers.auth.logout import LogoutController
 from controllers.health.controller import HealthController
 from controllers.auth.auth import LoginController
@@ -19,3 +20,4 @@ def addServiceLayer(api: Api):
     api.add_resource(LogoutController,LogoutController.route)
     # User
     api.add_resource(UserEnrollmentController, UserEnrollmentController.route)
+    api.add_resource(UserPasswordController, UserPasswordController.route)
