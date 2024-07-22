@@ -1,5 +1,4 @@
 from flask_restful import Resource, reqparse
-from models.auth.auth import UserModel
 from utils.server_response import StatusCode, ServerResponse
 from utils.jwt_manager import validate_jwt
 from flask import request
