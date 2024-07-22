@@ -12,6 +12,8 @@ class StatusCode:
     INTERNAL_SERVER_ERROR = 500
     TIMEOUT = 503
     BAD_REQUEST = 400
+    FORBIDDEN = 403 
+    UNAUTHORIZED = 401
 
 class ServerResponse:
     """Handle server responses

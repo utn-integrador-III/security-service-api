@@ -79,3 +79,18 @@ class UserModel:
         encryption_util = EncryptionUtil()   
         decrypted_stored_password = encryption_util.decrypt(stored_password)
         return input_password == decrypted_stored_password
+
+
+    @classmethod
+    def update_password(cls, email, new_password):
+        try:
+            __dbmanager__.update_password(email, new_password)
+        except Exception as e:
+            logging.error(f"Error updating password: {str(e)}", exc_info=True)
+            raise Exception('Error updating password')
+        
+    @staticmethod
+    def verify_old_password(plain_password, encrypted_password):
+        encryption_util = EncryptionUtil()
+        return encryption_util.verify_old_password(plain_password, encrypted_password)
+

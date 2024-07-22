@@ -97,4 +97,20 @@ class Connection:
         except Exception as e:
             logging.error(f"Database error in find_by_email: {str(e)}", exc_info=True)
             raise
+
+    def update_password(self, email, new_password):
+        try:
+            result = self.collection.update_one(
+                {"email": email},
+                {"$set": {"password": new_password}}
+            )
+            if result.matched_count == 0:
+                raise Exception("No user found with the provided email.")
+        except Exception as e:
+            logging.error(f"Error updating password: {str(e)}", exc_info=True)
+            raise Exception('Error updating password')
+
+
+
+    
         

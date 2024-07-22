@@ -91,3 +91,11 @@ class EncryptionUtil:
 
         except Exception as e:
             raise Exception(f"Decryption failed: {str(e)}")
+
+
+    def verify_old_password(self, plain_password, encrypted_password):
+        try:
+            decrypted_password = self.decrypt(encrypted_password)
+            return plain_password == decrypted_password
+        except Exception as e:
+            raise Exception(f"Verification failed: {str(e)}")

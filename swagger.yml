@@ -410,7 +410,96 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-  
+  /user/password:
+    put:
+      tags:
+        - "Users"
+      summary: "Update user password"
+      description: "Update the password for an existing user"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User password update object"
+          required: true
+          schema:
+            type: object
+            properties:
+              user_email:
+                type: string
+                format: email
+              old_password:
+                type: string
+                format: password
+              new_password:
+                type: string
+                format: password
+              confirm_password:
+                type: string
+                format: password
+            example:
+              user_email: "chcamonael@est.utn.ac.cr"
+              old_password: "oldpassword123"
+              new_password: "newpassword123"
+              confirm_password: "newpassword123"
+      responses:
+        "200":
+          description: "Password updated successfully"
+          schema:
+            allOf:
+              - $ref: "#/definitions/Response"
+              - properties:
+                  message:
+                    example: "Password updated successfully"
+                  message_code:
+                    example: "PASSWORD_UPDATED_SUCCESSFULLY"
+        "400":
+          description: "Bad Request"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "All fields are required: user_email, old_password, new_password, confirm_password"
+                  message_code:
+                    example: "MISSING_REQUIRED_FIELDS"
+        "401":
+          description: "Unauthorized"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Old password is incorrect"
+                  message_code:
+                    example: "INVALID_OLD_PASSWORD"
+        "403":
+          description: "Forbidden"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User is not active"
+                  message_code:
+                    example: "USER_NOT_ACTIVE"
+        "404":
+          description: "User not found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User not found"
+                  message_code:
+                    example: "USER_NOT_FOUND"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
   # /user:
   #   get:
   #     tags:
