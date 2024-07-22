@@ -240,6 +240,17 @@ definitions:
       is_active:
         type: boolean
         example: True
+      default_role:
+        type: boolean
+        example: True
+      screens:
+        type: array
+        items:
+          type: string
+        example:
+          - "LostObject/Report"
+          - "Lab/BookingComputer"
+          - "Lab/Issue"
 #The paths are the ones with all the information of the CRUD methods of the end-points
 paths:
   /auth/login:
