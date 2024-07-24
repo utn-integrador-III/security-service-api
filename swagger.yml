@@ -362,10 +362,7 @@ paths:
           description: "User successfully created"
           schema:
             allOf:
-              - $ref: "#/definitions/Response"
               - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
                   message:
                     example: "User created successfully"
                   message_code:
@@ -509,7 +506,6 @@ paths:
           description: "Password updated successfully"
           schema:
             allOf:
-              - $ref: "#/definitions/Response"
               - properties:
                   message:
                     example: "Password updated successfully"
