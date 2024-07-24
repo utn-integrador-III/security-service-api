@@ -555,6 +555,76 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
+  /user/reset-password:
+    post:
+      tags:
+        - "Users"
+      summary: "Restablecer contraseña de usuario"
+      description: "Inicia el proceso de restablecimiento de contraseña para un usuario y bloquea su cuenta"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Correo electrónico del usuario para restablecer la contraseña"
+          required: true
+          schema:
+            type: "object"
+            properties:
+              user_email:
+                type: "string"
+                format: "email"
+            example:
+              user_email: "semataoe@est.utn.ac.cr"
+      responses:
+        "200":
+          description: "Proceso de restablecimiento de contraseña iniciado exitosamente"
+          schema:
+            type: "object"
+            properties:
+              message:
+                type: "string"
+                example: "Password reset initiated and user blocked"
+              message_code:
+                type: "string"
+                example: "PASSWORD_RESET_INITIATED"
+              data:
+                type: "object"
+                properties:
+                  temporal_password:
+                    type: "string"
+                    example: "semataoe4715"
+                  verification_code:
+                    type: "string"
+                    example: "4715"
+                  expiration_time:
+                    type: "string"
+                    format: "date-time"
+                    example: "2024-07-24T19:15:00Z"
+                  user_status:
+                    type: "string"
+                    example: "blocked"
+        "400":
+          description: "Solicitud incorrecta"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "404":
+          description: "Usuario no encontrado"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User not found"
+                  message_code:
+                    example: "USER_NOT_FOUND"
+        "500":
+          description: "Error interno del servidor"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+
   /role:
     get:
       tags:
