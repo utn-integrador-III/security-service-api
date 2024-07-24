@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from models.user.user import UserModel
 from utils.server_response import StatusCode, ServerResponse
 from utils.jwt_manager import generate_jwt
+from models.role.role import RoleModel
 
 class LoginController(Resource):
     route = '/auth/login'
@@ -34,13 +35,20 @@ class LoginController(Resource):
 
         # Generar el JWT
         token = generate_jwt(user['role'])
-        
+        role_object = RoleModel.get_by_name(user['role'])
+        filtered_role_data = {
+        "name": role_object.name,
+        "permissions": role_object.permissions,
+        "is_active": role_object.is_active,
+        "screens": role_object.screens
+    }
+
         response_data = {
             'data': {
                 "email": user['email'],
                 "name": user['name'],
                 "status": user['status'],
-                "role": user['role'],
+                "role": filtered_role_data,
                 "token": token
             },
             'message': "User has been authenticated",
