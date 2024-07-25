@@ -109,7 +109,7 @@ class UserEnrollmentController(Resource):
                     provided_roles = [role.get('name') for role in default_roles]
                 
                 # Generar código de verificación fijo y código de expiración
-                verification_code = '123456'  # Código de verificación fijo para pruebas
+                verification_code = random.randint(100000, 999999)  # Código de verificación fijo para pruebas
                 expiration_code = datetime.utcnow() + timedelta(minutes=5)
                 
                 # Crear nuevo usuario
