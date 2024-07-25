@@ -1,40 +1,57 @@
+# controllers/login_controller.py
 from flask_restful import Resource, reqparse
 from models.user.user import UserModel
 from utils.server_response import StatusCode, ServerResponse
 from utils.jwt_manager import generate_jwt
+from utils.email_validator import is_valid_email_domain
 
 class LoginController(Resource):
     route = '/auth/login'
 
-    def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('email', required=True, help="Email cannot be blank!")
-        parser.add_argument('password', required=True, help="Password cannot be blank!")
-        args = parser.parse_args()
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('email', required=True, help="Email cannot be blank!")
+        self.parser.add_argument('password', required=True, help="Password cannot be blank!")
 
+    def post(self):
+        args = self.parser.parse_args()
         email = args['email']
         password = args['password']
 
-        # Validar dominios de correo electrónico permitidos
-        allowed_domains = ["@utn.ac.cr", "@est.utn.ac.cr"]
-        if not any(email.endswith(domain) for domain in allowed_domains):
-            return ServerResponse(message="Invalid email domain", message_code="INVALID_EMAIL_DOMAIN", status=StatusCode.BAD_REQUEST).to_response()
+        if not is_valid_email_domain(email):
+            return ServerResponse(
+                message="Invalid email domain",
+                message_code="INVALID_EMAIL_DOMAIN",
+                status=StatusCode.BAD_REQUEST
+            ).to_response()
 
         user = UserModel.find_by_email(email)
 
-        if not user:
-            print(user)
-            return ServerResponse(message="Invalid email or password", message_code="INVALID_CREDENTIALS", status=StatusCode.BAD_REQUEST).to_response()      
-
-        if not UserModel.verify_password(password, user['password']):
-            return ServerResponse(message="Invalid email or password", message_code="INVALID_CREDENTIALS", status=StatusCode.BAD_REQUEST).to_response()
+        if not user or not UserModel.verify_password(password, user['password']):
+            return ServerResponse(
+                message="Invalid email or password",
+                message_code="INVALID_CREDENTIALS",
+                status=StatusCode.UNAUTHORIZED
+            ).to_response()
 
         if user['status'] != "Active":
-            return ServerResponse(message="User is not active", message_code="USER_NOT_ACTIVE", status=StatusCode.BAD_REQUEST).to_response()
+            return ServerResponse(
+                message="User is not active",
+                message_code="USER_NOT_ACTIVE",
+                status=StatusCode.FORBIDDEN
+            ).to_response()
 
-        # Generar el JWT
         token = generate_jwt(user['role'])
         
+        # Update user's token in the database
+        success = UserModel.update_token(user['id'], token)
+        if not success:
+            return ServerResponse(
+                message="Failed to update user token",
+                message_code="TOKEN_UPDATE_FAILED",
+                status=StatusCode.INTERNAL_SERVER_ERROR
+            ).to_response()
+
         response_data = {
             'data': {
                 "email": user['email'],
