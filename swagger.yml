@@ -98,17 +98,17 @@ definitions:
         type: string
         example: "394FDJ347SL34"
   AuthPost:
-    type: object
+    type: "object"
     required:
-      - "email"
-      - "password"
+      - email
+      - password
     properties:
       email:
-        type: string
-        example: "emrodriguezso@es.utn.ac.cr"
+        type: "string"
+        example: "alrodriguezja@est.utn.ac.cr"
       password:
-        type: string
-        example: "47IR39Rt38"
+        type: "string"
+        example: "Aleja123#"
   LogoutResponse:
     type: object
     required:
@@ -264,6 +264,7 @@ paths:
           required: true
           schema:
             $ref: "#/definitions/AuthPost"
+
       summary: "Generate the authentication post method"
       description: "Create Auth"
       consumes:
@@ -274,16 +275,48 @@ paths:
        "200":
           description: "Get user information once logged in"
           schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    items:
-                      $ref: "#/definitions/AuthGet"
-                  message:
-                    example: "User has been authenticated"
-                  message_code:
-                    example: "USER_AUTHENTICATED"
+            type: "object"
+            properties:
+              data:
+                type: "object"
+                properties:
+                  email:
+                    type: "string"
+                    example: "alrodriguezja@est.utn.ac.cr"
+                  name:
+                    type: "string"
+                    example: "Alejandro Rodriguez"
+                  status:
+                    type: "string"
+                    example: "Active"
+                  role:
+                    type: "object"
+                    properties:
+                      name:
+                        type: "string"
+                        example: "BookinComputer"
+                      permissions:
+                        type: "array"
+                        items:
+                          type: "string"
+                        example: ["read", "write", "update", "delete"]
+                      is_active:
+                        type: "boolean"
+                        example: true
+                      screens:
+                        type: "array"
+                        items:
+                          type: "string"
+                        example: ["Lab/BookComputer", "Lab/Issue"]
+                  token:
+                    type: "string"
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7Lrr18H9LAk"
+              message:
+                type: "string"
+                example: "User has been authenticated"
+              message_code:
+                type: "string"
+                example: "USER_AUTHENTICATED"
        "400":
           description: "Unprocessable Entity - Validation Errors"
           schema:
@@ -329,10 +362,7 @@ paths:
           description: "User successfully created"
           schema:
             allOf:
-              - $ref: "#/definitions/Response"
               - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
                   message:
                     example: "User created successfully"
                   message_code:
@@ -476,7 +506,6 @@ paths:
           description: "Password updated successfully"
           schema:
             allOf:
-              - $ref: "#/definitions/Response"
               - properties:
                   message:
                     example: "Password updated successfully"
