@@ -1,6 +1,6 @@
 from flask_restful import Resource
-from flask import request
-from email_validator import validate_email, EmailNotValidError  # Asegúrate de importar la librería correcta
+from flask import request, make_response
+from email_validator import validate_email, EmailNotValidError
 from models.user.user import UserModel
 from models.role.role import RoleModel
 from utils.server_response import ServerResponse, StatusCode
@@ -8,13 +8,19 @@ from utils.message_codes import (
     INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, USER_SUCCESSFULLY_CREATED, INVALID_ROLE
 )
 import logging
-import random
 from datetime import datetime, timedelta
 
 class UserEnrollmentController(Resource):
-    route = '/user/enrollment'
+    route = '/auth/enrollment'
     
-    def post(self): 
+    def options(self):
+        response = make_response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
+        return response
+    
+    def post(self):
         try:
             data = request.json
             name = data.get('name')
@@ -24,8 +30,8 @@ class UserEnrollmentController(Resource):
             
             # Validar email
             try:
-                valid = validate_email(email)  # Validar el email
-                email = valid.email  # Actualizar con el email validado
+                valid = validate_email(email)
+                email = valid.email
             except EmailNotValidError as e:
                 return ServerResponse(
                     message=str(e),
@@ -102,8 +108,8 @@ class UserEnrollmentController(Resource):
                 if not provided_roles:
                     provided_roles = [role.get('name') for role in default_roles]
                 
-                # Generar código de verificación y código de expiración
-                verification_code = 123456  # Código de verificación fijo
+                # Generar código de verificación fijo y código de expiración
+                verification_code = '123456'  # Código de verificación fijo para pruebas
                 expiration_code = datetime.utcnow() + timedelta(minutes=5)
                 
                 # Crear nuevo usuario
@@ -124,7 +130,8 @@ class UserEnrollmentController(Resource):
                 return ServerResponse(
                     message="User successfully created",
                     message_code=USER_SUCCESSFULLY_CREATED,
-                    status=StatusCode.OK
+                    status=StatusCode.OK,
+                    data={"verification_code": verification_code}  # Incluye el código de verificación en la respuesta
                 )
             except Exception as e:
                 logging.error(f"Error creating user: {str(e)}", exc_info=True)
