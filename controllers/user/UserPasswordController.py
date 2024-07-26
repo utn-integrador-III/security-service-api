@@ -58,7 +58,7 @@ class UserPasswordController(Resource):
 
             # Verificar contraseña antigua
             encryption_util = EncryptionUtil()
-            if not UserModel.verify_old_password(old_password, user['password']):
+            if not UserModel.verify_password(old_password, user['password']):
                 return ServerResponse(
                     message="Old password is incorrect",
                     message_code=INVALID_OLD_PASSWORD,
