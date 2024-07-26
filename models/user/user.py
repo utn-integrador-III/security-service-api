@@ -88,9 +88,4 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
-        
-    @staticmethod
-    def verify_old_password(plain_password, encrypted_password):
-        encryption_util = EncryptionUtil()
-        return encryption_util.verify_old_password(plain_password, encrypted_password)
 
