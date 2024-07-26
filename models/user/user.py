@@ -1,6 +1,7 @@
 import logging
 from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__
+from models.user.db_queries import update_token
 
 class UserModel:
     def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
@@ -96,7 +97,7 @@ class UserModel:
     @staticmethod
     def update_token(user_id, token):
         try:
-            success = __dbmanager__.update_token(user_id, token)
+            success = update_token(user_id, token)
             return success
         except Exception as e:
             logging.error(f"Error updating token: {str(e)}", exc_info=True)
