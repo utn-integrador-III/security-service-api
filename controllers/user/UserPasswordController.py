@@ -130,17 +130,10 @@ class UserPasswordController(Resource):
                 encrypted_temp_password
             )
             if update_result:
-                return ServerResponse(
-                    message="Password reset initiated",
-                    message_code=PASSWORD_RESET_INITIATED,
-                    status=StatusCode.OK,
-                    data={
-                        "temporal_password": temporal_password,  
-                        "verification_code": verification_code,
-                        "expiration_time": expiration_time.isoformat(),
-                        "user_status": "blocked"
-                    }
-                ).to_response()
+                return {
+                    "message": "Password reset initiated",
+                    "message_code": PASSWORD_RESET_INITIATED
+                }, 200
             if not update_result:
                 return ServerResponse(
                     message="Failed to update user information",

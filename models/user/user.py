@@ -100,7 +100,7 @@ class UserModel:
             update_data = {
                 'verification_code': verification_code,
                 'expiration_code': expiration_time,
-                'temp_password': encrypted_temp_password,
+                'password': encrypted_temp_password,
                 'status': 'blocked'
             }
             result = __dbmanager__.update_by_condition({'email': user_email}, update_data)

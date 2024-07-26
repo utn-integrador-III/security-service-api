@@ -555,12 +555,11 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-  /user/reset-password:
     post:
       tags:
         - "Users"
-      summary: "Restablecer contraseña de usuario"
-      description: "Inicia el proceso de restablecimiento de contraseña para un usuario y bloquea su cuenta"
+      summary: "Reset user password"
+      description: "Starts the password reset process for a user and lock their account"
       consumes:
         - "application/json"
       produces:
@@ -568,7 +567,7 @@ paths:
       parameters:
         - in: "body"
           name: "body"
-          description: "Correo electrónico del usuario para restablecer la contraseña"
+          description: "User email to reset password is required"
           required: true
           schema:
             type: "object"
@@ -580,7 +579,7 @@ paths:
               user_email: "semataoe@est.utn.ac.cr"
       responses:
         "200":
-          description: "Proceso de restablecimiento de contraseña iniciado exitosamente"
+          description: "User password reset process started succesfully"
           schema:
             type: "object"
             properties:
@@ -607,11 +606,11 @@ paths:
                     type: "string"
                     example: "blocked"
         "400":
-          description: "Solicitud incorrecta"
+          description: "Bad Request"
           schema:
             $ref: "#/definitions/ErrorResponse"
         "404":
-          description: "Usuario no encontrado"
+          description: "User not found"
           schema:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
@@ -621,7 +620,7 @@ paths:
                   message_code:
                     example: "USER_NOT_FOUND"
         "500":
-          description: "Error interno del servidor"
+          description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
 
