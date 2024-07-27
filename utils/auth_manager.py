@@ -1,8 +1,10 @@
 from functools import wraps
 import requests
 from flask import request
-
 from decouple import config
+import random
+import string
+
 
 def auth_required(action=None, permission='', with_args=False):
     def decorator(f):
@@ -35,7 +37,8 @@ def auth_required(action=None, permission='', with_args=False):
                 return response.json(), 401
         return catcher
     return decorator
-
+def generate_verification_code(length=4):
+    return ''.join(random.choices(string.digits, k=length))
 
 
 
