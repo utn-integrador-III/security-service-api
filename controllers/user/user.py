@@ -48,11 +48,14 @@ class UserVerificationController(Resource):
                     "status": StatusCode.UNAUTHORIZED
                 }).to_response()
             
-            if user['status'] != 'Pending':
-                return ServerResponse({
-                    "message": "User is not in a pending state",
-                    "status": StatusCode.BAD_REQUEST
-                }).to_response()
+
+
+            if user['status'].lower() != 'pending':
+             return ServerResponse({
+              "message": "User is not in a pending state",
+              "status": StatusCode.BAD_REQUEST
+            }).to_response()
+
             
             UserModel.user_activation(email)
             
