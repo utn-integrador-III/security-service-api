@@ -63,7 +63,7 @@ class UserModel:
         try:
             user = __dbmanager__.find_by_email(email)
             if user:
-                user['id'] = str(user.pop('_id'))  # Convert ObjectId to string and assign it to 'id'
+                user['id'] = str(user.pop('_id'))
             return user
         except Exception as e:
             raise Exception(f"Error in find_by_email: {str(e)}")
@@ -88,3 +88,12 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
+
+    @staticmethod
+    def update_token(user_id, token):
+        try:
+            success = update_token(user_id, token)
+            return success
+        except Exception as e:
+            logging.error(f"Error updating token: {str(e)}", exc_info=True)
+            return False
