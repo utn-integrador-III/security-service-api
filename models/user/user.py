@@ -1,6 +1,7 @@
 import logging
 from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__
+from models.user.db_queries import update_token
 
 class UserModel:
     def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
@@ -62,7 +63,7 @@ class UserModel:
         try:
             user = __dbmanager__.find_by_email(email)
             if user:
-                user['id'] = str(user.pop('_id'))  # Convert ObjectId to string and assign it to 'id'
+                user['id'] = str(user.pop('_id'))
             return user
         except Exception as e:
             raise Exception(f"Error in find_by_email: {str(e)}")
@@ -75,10 +76,9 @@ class UserModel:
             raise Exception(f"Error logging out user: {str(e)}")
 
     @staticmethod
-    def verify_password(input_password, stored_password):
-        encryption_util = EncryptionUtil()   
-        decrypted_stored_password = encryption_util.decrypt(stored_password)
-        return input_password == decrypted_stored_password
+    def verify_password(plain_password, encrypted_password):
+        encryption_util = EncryptionUtil()
+        return encryption_util.verify_password(plain_password, encrypted_password)
 
 
     @classmethod
@@ -89,3 +89,11 @@ class UserModel:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
 
+    @staticmethod
+    def update_token(user_id, token):
+        try:
+            success = update_token(user_id, token)
+            return success
+        except Exception as e:
+            logging.error(f"Error updating token: {str(e)}", exc_info=True)
+            return False

@@ -22,6 +22,7 @@ class Connection:
         except Exception as e:
             return e
         return result
+    
     def find_one(self, name):
         try:
             result = self.collection.find_one(name)
@@ -29,6 +30,7 @@ class Connection:
         except Exception as e:
             logging.exception(e)
             return str(e)
+        
     def get_by_query(self, query):
         try:
             result = self.collection.find(query)
@@ -54,6 +56,7 @@ class Connection:
             self.collection.update_one({"_id": ObjectId(filter_id)}, {"$set": new_data})
         except Exception as e:
             return e
+        
     def update_data(self, id, new_data):
         try:
             self.collection.update_one(
@@ -65,13 +68,13 @@ class Connection:
         
     def update_by_condition(self, condition, new_data):
         try:
-            self.collection.update_one(
-                condition,
-                {"$set": new_data}
-            )
+            result = self.collection.update_one(condition, {"$set": new_data})
+            if result.matched_count == 0:
+                return result
+            return result
         except Exception as e:
             logging.exception(e)
-            raise e
+            raise str(e)
 
     def update_data(self, id, new_data):
         try:
@@ -109,8 +112,4 @@ class Connection:
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
-
-
-
-    
         
