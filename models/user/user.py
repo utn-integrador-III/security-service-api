@@ -88,7 +88,7 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
-    
+        
     @staticmethod
     def update_reset_password_info(user_email, verification_code, expiration_time, encrypted_temp_password):
         try:
