@@ -589,22 +589,6 @@ paths:
               message_code:
                 type: "string"
                 example: "PASSWORD_RESET_INITIATED"
-              data:
-                type: "object"
-                properties:
-                  temporal_password:
-                    type: "string"
-                    example: "semataoe4715"
-                  verification_code:
-                    type: "string"
-                    example: "4715"
-                  expiration_time:
-                    type: "string"
-                    format: "date-time"
-                    example: "2024-07-24T19:15:00Z"
-                  user_status:
-                    type: "string"
-                    example: "blocked"
         "400":
           description: "Bad Request"
           schema:
