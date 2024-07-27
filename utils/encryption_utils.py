@@ -1,11 +1,10 @@
 import os
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.primitives import padding
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import base64
 from decouple import config
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes, padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class EncryptionUtil:
     def __init__(self):
@@ -89,13 +88,14 @@ class EncryptionUtil:
             # Convert the decrypted bytes back to a string
             return data.decode('utf-8')
 
+        except ValueError as e:
+            raise Exception("Decryption failed: Invalid padding or incorrect password.") from e
         except Exception as e:
             raise Exception(f"Decryption failed: {str(e)}")
 
-
-    def verify_old_password(self, plain_password, encrypted_password):
+    def verify_password(self, plain_password, encrypted_password):
         try:
             decrypted_password = self.decrypt(encrypted_password)
             return plain_password == decrypted_password
         except Exception as e:
-            raise Exception(f"Verification failed: {str(e)}")
+            return False
