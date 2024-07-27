@@ -15,13 +15,10 @@ def send_email(recipient_email, code):
     part1 = MIMEText(message, 'plain')
     msg.attach(part1)
 
-    #SMTP server configs
-    smtp_server = 'smtp.office365.com'
-    smtp_port = 587
 
     try:
         # create a secure SSL connection with server
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = smtplib.SMTP(config('SMTP_SERVER'),config('SMTP_PORT'))
         server.starttls()
         # Login to your outlook email
         server.login(config('SENDER_EMAIL'), config('SENDER_EMAIL_PASSWORD'))
