@@ -4,14 +4,16 @@ from models.user.db_queries import __dbmanager__
 from models.user.db_queries import update_token
 
 class UserModel:
-    def __init__(self, name, password, email, status, verification_code, expiration_code, roles):
+    def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
         self.name = name
         self.password = password
         self.email = email
         self.status = status
         self.verification_code = verification_code
         self.expiration_code = expiration_code
-        self.roles = roles
+        self.role = role
+        self.token = token
+        self.is_session_active = is_session_active
     
     def to_dict(self):
         return {
@@ -20,17 +22,24 @@ class UserModel:
             'password': self.password,
             'status': self.status,
             'verification_code': self.verification_code,
-            'expiration_code': self.expiration_code
+            'expiration_code': self.expiration_code,
+            'role': self.role,
+            'token': self.token,
+            'is_session_active': self.is_session_active
         }
     
     @classmethod
     def create_user(cls, user_data):
         try:
+            # Encrypt password
             encryption_util = EncryptionUtil()
             user_data['password'] = encryption_util.encrypt(user_data['password'])
+            
+            # Insert the user in the database
             result = __dbmanager__.create_data(user_data)
             
             if result:
+                # Create UserModel instance with expected fields
                 return cls(
                     name=user_data['name'],
                     password=user_data['password'],
@@ -38,7 +47,9 @@ class UserModel:
                     status=user_data['status'],
                     verification_code=user_data['verification_code'],
                     expiration_code=user_data['expiration_code'],
-                    roles=user_data['roles']
+                    role=user_data['role'],
+                    token=user_data['token'],
+                    is_session_active=user_data['is_session_active']
                 )
             else:
                 raise Exception("Failed to create user in database")
@@ -46,6 +57,7 @@ class UserModel:
             logging.error(f"Error creating user: {str(e)}", exc_info=True)
             raise Exception('Error creating user')
 
+     
     @staticmethod
     def find_by_email(email):
         try:
@@ -54,8 +66,14 @@ class UserModel:
                 user['id'] = str(user.pop('_id'))
             return user
         except Exception as e:
-            logging.error(f"Error finding user by email: {str(e)}", exc_info=True)
-            raise Exception('Error finding user by email')
+            raise Exception(f"Error in find_by_email: {str(e)}")
+        
+    @staticmethod
+    def logout_user(email):
+        try:
+             __dbmanager__.update_by_condition({'email': email}, {'token': '', 'is_session_active': False})
+        except Exception as e:
+            raise Exception(f"Error logging out user: {str(e)}")
 
     @staticmethod
     def verify_password(plain_password, encrypted_password):
@@ -66,7 +84,7 @@ class UserModel:
     @classmethod
     def update_password(cls, email, new_password):
         try:
-            return __dbmanager__.update_data(user.to_dict())
+            __dbmanager__.update_password(email, new_password)
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
@@ -98,3 +116,18 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error updating token: {str(e)}", exc_info=True)
             return False
+    
+    @staticmethod
+    def user_activation(email):
+        try:
+            modif = {
+                        'token': '', 
+                        'is_session_active': False,
+                        'status': 'Active',
+                        'expiration_code': None,
+                        'verification_code': ''
+                    }    
+            return __dbmanager__.update_by_condition({'email': email}, modif)
+        except Exception as e:
+            logging.error(f"Error saving user to database: {str(e)}", exc_info=True)
+            raise Exception('Error saving user to database')

@@ -27,48 +27,44 @@ class UserVerificationController(Resource):
             user = UserModel.find_by_email(email)
             
             if not user:
-                return jsonify({
-                    "message": "User not found",
-                    "message_code": USER_NOT_FOUND,
-                    "status": StatusCode.NOT_FOUND
-                })
+                return ServerResponse(
+                    message="User not found",
+                    message_code=USER_NOT_FOUND,
+                    status=StatusCode.NOT_FOUND
+                ).to_response()
             
-            if user.verification_code != code:
-                return jsonify({
-                    "message": "Invalid verification code",
-                    "message_code": INVALID_VERIFICATION_CODE,
-                    "status": StatusCode.UNAUTHORIZED
-                })
-            
-            if user.expiration_code < datetime.utcnow():
-                return jsonify({
+            if user['verification_code'] != code:
+                return ServerResponse(
+                message="Invalid verification code",
+                message_code=INVALID_VERIFICATION_CODE,
+                status=StatusCode.UNAUTHORIZED
+            ).to_response()
+
+
+            if user['expiration_code'] < datetime.utcnow():
+                return ServerResponse({
                     "message": "Verification code expired",
                     "message_code": VERIFICATION_EXPIRED,
                     "status": StatusCode.UNAUTHORIZED
-                })
+                }).to_response()
             
-            if user.status != 'Pending':
-                return jsonify({
+            if user['status'] != 'Pending':
+                return ServerResponse({
                     "message": "User is not in a pending state",
                     "status": StatusCode.BAD_REQUEST
-                })
+                }).to_response()
             
-            user.status = 'Active'
-            user.token = ""
-            user.is_session_active = False
-            user.expiration_code = None
-            user.verification_code = None
-            UserModel.save_to_db(user)
+            UserModel.user_activation(email)
             
-            return jsonify({
+            return ServerResponse({
                 "message": "User successfully verified",
                 "message_code": VERIFICATION_SUCCESSFUL,
                 "status": StatusCode.OK
-            })
+            }).to_response()
         
         except Exception as e:
             logging.error(f"An unexpected error occurred: {str(e)}", exc_info=True)
             return jsonify({
                 "message": "An unexpected error occurred.",
                 "status": StatusCode.INTERNAL_SERVER_ERROR
-            })
+            }).to_response()
