@@ -116,3 +116,18 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error updating token: {str(e)}", exc_info=True)
             return False
+
+    @staticmethod
+    def user_activation(email):
+        try:
+            modif = {
+                        'token': '', 
+                        'is_session_active': False,
+                        'status': 'Active',
+                        'expiration_code': None,
+                        'verification_code': ''
+                    }    
+            return __dbmanager__.update_by_condition({'email': email}, modif)
+        except Exception as e:
+            logging.error(f"Error saving user to database: {str(e)}", exc_info=True)
+            raise Exception('Error saving user to database')
