@@ -6,6 +6,7 @@ from flask_restful import Resource
 from validate_email import validate_email
 from models.user.user import UserModel
 from models.role.role import RoleModel
+from utils.email_manager import send_email
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
     CREATED, INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, NO_ACTIVE_ROLES_FOUND, DEFAULT_ROLE_NOT_FOUND, USER_CREATION_ERROR, UNEXPECTED_ERROR
@@ -99,6 +100,7 @@ class UserEnrollmentController(Resource):
                 }
 
                 new_user = UserModel.create_user(user_data)
+                send_email(email, verification_code)
 
                 return ServerResponse(
                     data=None,
