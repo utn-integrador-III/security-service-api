@@ -22,4 +22,5 @@ def addServiceLayer(api: Api):
     # User
     api.add_resource(UserEnrollmentController, UserEnrollmentController.route)
     api.add_resource(UserPasswordController, UserPasswordController.route)
+
     api.add_resource(UserVerificationController, UserVerificationController.route)  

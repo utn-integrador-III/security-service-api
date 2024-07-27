@@ -48,8 +48,6 @@ class UserVerificationController(Resource):
                     "status": StatusCode.UNAUTHORIZED
                 }).to_response()
             
-
-
             if user['status'].lower() != 'pending':
              return ServerResponse({
               "message": "User is not in a pending state",
