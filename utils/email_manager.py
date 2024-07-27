@@ -10,7 +10,7 @@ def send_email(recipient_email, code):
     msg['FROM'] = config('SENDER_EMAIL')
     msg['TO'] = recipient_email
     msg['Subject'] = 'Verification Code'
-    message = ' Hi ' + recipient_email + 'Your verification Code to activate your account is: ' + str(code) + 'Follow this link http//:localhost:4200/activateAcc to proceed on activating your account' 
+    message = ' Hi ' + recipient_email + ' Your verification Code to activate your account is: ' + str(code) + ' Follow this link http//:localhost:4200/activateAcc to proceed on activating your account' 
     # record the MIME type of both parts to be included in message
     part1 = MIMEText(message, 'plain')
     msg.attach(part1)

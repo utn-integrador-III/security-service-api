@@ -101,6 +101,7 @@ class UserEnrollmentController(Resource):
 
                 new_user = UserModel.create_user(user_data)
                 send_email(email, verification_code)
+
                 return ServerResponse(
                     data=None,
                     message="User created successfully",

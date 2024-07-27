@@ -1,6 +1,7 @@
 import logging
 from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__
+from models.user.db_queries import update_token
 
 class UserModel:
     def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
@@ -62,7 +63,7 @@ class UserModel:
         try:
             user = __dbmanager__.find_by_email(email)
             if user:
-                user['id'] = str(user.pop('_id'))  # Convert ObjectId to string and assign it to 'id'
+                user['id'] = str(user.pop('_id'))
             return user
         except Exception as e:
             raise Exception(f"Error in find_by_email: {str(e)}")
@@ -97,3 +98,11 @@ class UserModel:
             logging.error(f"Error updating token: {str(e)}", exc_info=True)
         return False
 
+    @staticmethod
+    def update_token(user_id, token):
+        try:
+            success = update_token(user_id, token)
+            return success
+        except Exception as e:
+            logging.error(f"Error updating token: {str(e)}", exc_info=True)
+            return False
