@@ -4,6 +4,7 @@ from controllers.auth.logout import LogoutController
 from controllers.health.controller import HealthController
 from controllers.auth.auth import LoginController
 from controllers.auth.verify_auth import AuthController
+from controllers.auth.refresh_token import RefreshController
 from controllers.rol.rol_controller import RolController
 from controllers.user.UserEnrollment_controller import UserEnrollmentController
 def addServiceLayer(api: Api):
@@ -13,6 +14,7 @@ def addServiceLayer(api: Api):
     # Auth
     api.add_resource(AuthController, AuthController.route)
     api.add_resource(LoginController, LoginController.route)
+    api.add_resource(RefreshController, RefreshController.route)
     # Rol
     api.add_resource(RolController, RolController.route)
 
