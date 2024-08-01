@@ -12,16 +12,28 @@ class AuthController(Resource):
         args = parser.parse_args()
 
         permission = args['permission']
-        token = request.headers["Authorization"]
-        
-        # Validate JWT
-        roles = validate_jwt(token)
+        token = request.headers.get("Authorization")
 
-        if roles is None:
-            return ServerResponse(message="User Not valid", message_code="USER_NOT_FOUND", status=StatusCode.BAD_REQUEST).to_response()
-        
+        if not token:
+            return ServerResponse(
+                data=None,
+                message="Authorization token is required",
+                message_code="AUTH_TOKEN_REQUIRED",
+                status=StatusCode.UNAUTHORIZED
+            ).to_response()
+
+        # Validate JWT
+        user_data = validate_jwt(token)
+
+        if user_data is None:
+            return ServerResponse(
+                message="User Not valid",
+                message_code="USER_NOT_FOUND",
+                status=StatusCode.BAD_REQUEST
+            ).to_response()
+
         return ServerResponse(
-            data={"rolName": roles},
+            data=user_data,
             message="User is valid",
             message_code="USER_AUTHENTICATED",
             status=StatusCode.OK
