@@ -11,7 +11,6 @@ def generate_jwt(identity):
         'iat': datetime.utcnow(),
         'sub': identity
     }
-    print(payload)
     token = jwt.encode(payload, config('JWT_SECRET_KEY'), algorithm='HS256')
     return token
 
@@ -21,7 +20,8 @@ def validate_jwt(token):
     """
     try:
         payload = jwt.decode(token, config('JWT_SECRET_KEY'), algorithms=['HS256'])
-        return payload
+
+        return payload['sub'], payload['exp']
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:

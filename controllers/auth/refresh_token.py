@@ -8,40 +8,39 @@ class RefreshController(Resource):
     route = '/refresh'
     def post(self):
         # Extract the token from the request headers or body
-        token = request.headers["Authorization"]
+        token = request.headers.get("Authorization")
         if not token:
             return ServerResponse(message="Token not added", message_code="BAD_REQUEST", status=StatusCode.BAD_REQUEST).to_response()
 
         # Validate the old token but ignore expiration error
-        payload = validate_jwt(token)
-        if not payload:
+        subject, exp_timestamp = validate_jwt(token)
+        if subject is None:
             return ServerResponse(message="Token Not Valid", message_code="NOT_FOUND", status=StatusCode.NOT_FOUND).to_response()
 
         # Check if the token is expired
-        if 'exp' in payload:
-            expiration_time = datetime.utcfromtimestamp(payload['exp'])
-            if expiration_time < datetime.utcnow():
-                # Token is expired, check if it's within a grace period
-                grace_period = datetime.utcnow() + timedelta(minutes=5)  # 5 minutes grace period
-                if expiration_time < grace_period:
-                    # If within grace period, issue a new token
-                    new_token = generate_jwt(payload['sub'])
-                    return ServerResponse(
-                        data={'token': new_token},
-                        message='Token Refreshed',
-                        message_code='OK',
-                        status=StatusCode.OK,
-                    ).to_response()
-                else:
-                    return ServerResponse(message="Token Expired", message_code="UNAUTHORIZED", status=StatusCode.UNAUTHORIZED).to_response()
-            else:
-                # Token not expired, issue a new one
-                new_token = generate_jwt(payload['sub'])
-                return ServerResponse(
-                        data={'token': new_token},
-                        message='Token Refreshed',
-                        message_code='OK',
-                        status=StatusCode.OK,
-                    ).to_response()
+        expiration_time = datetime.utcfromtimestamp(exp_timestamp)
+        current_time = datetime.utcnow()
+        grace_period_end = expiration_time + timedelta(minutes=5)  # 5 minutes grace period after expiration
 
-        return ServerResponse(message="Internal Server Error", message_code="INTERNAL_SERVER_ERROR", status=StatusCode.INTERNAL_SERVER_ERROR).to_response()
+        if current_time > expiration_time:
+            if current_time < grace_period_end:
+                # If within grace period, issue a new token
+                new_token = generate_jwt(subject)
+                return ServerResponse(
+                    data={'token': new_token},
+                    message='Token Refreshed',
+                    message_code='OK',
+                    status=StatusCode.OK,
+                ).to_response()
+            else:
+                # Token is beyond the grace period
+                return ServerResponse(message="Token Expired", message_code="UNAUTHORIZED", status=StatusCode.UNAUTHORIZED).to_response()
+        else:
+            # Token not expired, issue a new one anyway for refresh
+            new_token = generate_jwt(subject)
+            return ServerResponse(
+                    data={'token': new_token},
+                    message='Token Refreshed',
+                    message_code='OK',
+                    status=StatusCode.OK,
+                ).to_response()
