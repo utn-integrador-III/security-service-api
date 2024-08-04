@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from flask import request
 
 class RefreshController(Resource):
-    route = '/refresh'
+    route = '/auth/refresh'
     def post(self):
         # Extract the token from the request headers or body
         token = request.headers.get("Authorization")
