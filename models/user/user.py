@@ -1,7 +1,6 @@
 import logging
 from utils.encryption_utils import EncryptionUtil
-from models.user.db_queries import __dbmanager__
-from models.user.db_queries import update_token
+from models.user.db_queries import __dbmanager__, update_token, update_password
 
 class UserModel:
     def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
@@ -84,7 +83,7 @@ class UserModel:
     @classmethod
     def update_password(cls, email, new_password):
         try:
-            __dbmanager__.update_password(email, new_password)
+            update_password(email, new_password)
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
@@ -99,12 +98,13 @@ class UserModel:
                 'status': 'blocked'
             }
             result = __dbmanager__.update_by_condition({'email': user_email}, update_data)
-            if result:
-                logging.info(f"Successfully updated reset password info for user: {user_email}")
-                return True
-            else:
+            if result is None or result.matched_count == 0:
                 logging.warning(f"Failed to update reset password info for user: {user_email}. User not found or no changes made.")
                 return False
+            else:
+                logging.info(f"Successfully updated reset password info for user: {user_email}")
+                return True
+                
         except Exception as e:
             logging.error(f"Error updating reset password info: {str(e)}", exc_info=True)
             raise Exception('Error updating reset password info')
