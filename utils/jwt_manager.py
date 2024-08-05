@@ -20,7 +20,8 @@ def validate_jwt(token):
     """
     try:
         payload = jwt.decode(token, config('JWT_SECRET_KEY'), algorithms=['HS256'])
-        return payload['sub']
+
+        return payload['sub'], payload['exp']
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:

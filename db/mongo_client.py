@@ -68,14 +68,10 @@ class Connection:
         
     def update_by_condition(self, condition, new_data):
         try:
-            result = self.collection.update_one(
-            condition,
-            {"$set": new_data}
-        )
+            result = self.collection.update_one(condition, {"$set": new_data})
             if result.matched_count == 0:
-                logging.warning(f"No document found matching condition: {condition}")
-                return False
-            return result.modified_count > 0 
+                return result
+            return result
         except Exception as e:
             logging.exception(e)
             raise e
