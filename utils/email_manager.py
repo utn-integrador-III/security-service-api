@@ -30,3 +30,30 @@ def send_email(recipient_email, code):
     finally:
         #close connection
         server.quit()
+
+def send_email_reset(recipient_email, temporal_password):
+    # Crea un mensaje multipart
+    msg = MIMEMultipart('alternative')
+    msg['From'] = config('SENDER_EMAIL')
+    msg['To'] = recipient_email
+    msg['Subject'] = 'Password Reset Request'
+    
+    # Define el cuerpo del mensaje
+    message = f"Hi,\n\nYour password has been reset. Your new temporary password is: {temporal_password}\n\nPlease use this password to log in and change your password immediately.\n\nBest regards,\nYour Support Team"
+    part1 = MIMEText(message, 'plain')
+    msg.attach(part1)
+
+    try:
+        # Conéctate al servidor SMTP
+        server = smtplib.SMTP(config('SMTP_SERVER'), config('SMTP_PORT'))
+        server.starttls()
+        # Inicia sesión en tu correo electrónico
+        server.login(config('SENDER_EMAIL'), config('SENDER_EMAIL_PASSWORD'))
+        # Envía el correo electrónico
+        server.sendmail(config('SENDER_EMAIL'), recipient_email, msg.as_string())
+        print('Email has been sent!')
+    except smtplib.SMTPException as e:
+        print('Error: unable to send email', str(e))
+    finally:
+        # Cierra la conexión
+        server.quit()

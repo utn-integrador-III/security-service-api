@@ -17,6 +17,7 @@ from utils.message_codes import (
     PASSWORD_RESET_INITIATED,
     UPDATE_USER_FAILED,
 )
+from utils.email_manager import send_email_reset
 from datetime import datetime, timedelta
 import random
 import string
@@ -130,6 +131,7 @@ class UserPasswordController(Resource):
                 encrypted_temp_password
             )
             if update_result:
+                send_email_reset(user_email, temporal_password)
                 return ServerResponse(
                     message="Password reset initiated",
                     message_code=PASSWORD_RESET_INITIATED,
