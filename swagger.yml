@@ -630,11 +630,11 @@ paths:
           schema:
             type: "object"
             properties:
-              user_email:
+              email:
                 type: "string"
                 format: "email"
             example:
-              user_email: "semataoe@est.utn.ac.cr"
+              email: "semataoe@est.utn.ac.cr"
       responses:
         "200":
           description: "User password reset process started succesfully"
