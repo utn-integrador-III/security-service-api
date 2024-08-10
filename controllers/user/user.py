@@ -33,7 +33,7 @@ class UserVerificationController(Resource):
                     status=StatusCode.NOT_FOUND
                 ).to_response()
             
-            if user['verification_code'] != code:
+            if user['verification_code'] != int(code):
                 return ServerResponse(
                 message="Invalid verification code",
                 message_code=INVALID_VERIFICATION_CODE,
