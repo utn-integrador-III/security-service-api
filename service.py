@@ -6,7 +6,7 @@ from controllers.auth.auth import LoginController
 from controllers.auth.verify_auth import AuthController
 from controllers.auth.refresh_token import RefreshController
 from controllers.rol.rol_controller import RolController
-from controllers.user.user import UserVerificationController
+from controllers.user.UserVerificationController import UserVerificationController
 from controllers.user.UserEnrollment_controller import UserEnrollmentController
 def addServiceLayer(api: Api):
     # Health
