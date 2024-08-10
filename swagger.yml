@@ -109,6 +109,20 @@ definitions:
       password:
         type: "string"
         example: "Aleja123#"
+  AuthRefresh:
+    type: "object"
+    required:
+      - token
+    properties:
+      token:
+        type: "string"
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7Lrr18H9LAk"
+  AuthTokenGet:
+      type: "object"
+      properties:
+        token:
+          type: "string"
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7L_IJO3dhj"
   LogoutResponse:
     type: object
     required:
@@ -337,6 +351,50 @@ paths:
                   - "USER_NOT_ACTIVE"
                 example: "INVALID_EMAIL_DOMAIN"
        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+  /auth/refresh:
+    post:
+      tags:
+        - "Auth"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Post Method to authenticate user with email and password"
+          required: true
+          schema:
+            $ref: "#/definitions/AuthRefresh"
+      summary: "Generate the authentication post method"
+      description: "Refresh Auth Token"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      responses:
+        "200":
+            description: "Get a New token"
+            schema:
+              allOf:
+                - $ref: "#/definitions/Response"
+                - properties:
+                    data:
+                      $ref: "#/definitions/AuthTokenGet"
+                    message:
+                      example: "Token successfully Refreshed"
+                    message_code:
+                      example: "TOKEN_SUCCESSFULLY_REFRESHED"
+        "401":
+            description: "Unauthorized"
+            schema:
+              allOf:
+                - $ref: "#/definitions/ErrorResponse"
+                - properties:
+                    message:
+                      example: "Token has expired or was invalid"
+                    message_code:
+                      example: "UNAUTHORIZED"
+        "500":
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
@@ -572,11 +630,11 @@ paths:
           schema:
             type: "object"
             properties:
-              user_email:
+              email:
                 type: "string"
                 format: "email"
             example:
-              user_email: "semataoe@est.utn.ac.cr"
+              email: "semataoe@est.utn.ac.cr"
       responses:
         "200":
           description: "User password reset process started succesfully"
@@ -607,7 +665,6 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
-
   /role:
     get:
       tags:

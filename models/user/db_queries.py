@@ -24,3 +24,12 @@ def update_token(user_id, token):
         return False
 
     return True
+
+def update_password(self, email, new_password):
+    try:
+        result = __dbmanager__.update_by_condition({"email": email}, {"password": new_password})
+        if result is None or result.matched_count == 0:
+            raise Exception("No user found with the provided email.")
+    except Exception as e:
+        logging.error(f"Error updating password: {str(e)}", exc_info=True)
+        raise Exception('Error updating password')

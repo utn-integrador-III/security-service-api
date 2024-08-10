@@ -42,8 +42,8 @@ class LoginController(Resource):
                 status=StatusCode.FORBIDDEN
             ).to_response()
 
-        token = generate_jwt(user['role'])
-        
+        token = generate_jwt(user['id'], user['role'], user['email'])
+
         # Update user's token in the database
         success = UserModel.update_token(user['id'], token)
         if not success:
@@ -55,11 +55,11 @@ class LoginController(Resource):
         
         role_object = RoleModel.get_by_name(user['role'])
         filtered_role_data = {
-        "name": role_object.name,
-        "permissions": role_object.permissions,
-        "is_active": role_object.is_active,
-        "screens": role_object.screens
-    }
+            "name": role_object.name,
+            "permissions": role_object.permissions,
+            "is_active": role_object.is_active,
+            "screens": role_object.screens
+        }
 
         response_data = {
             'data': {
