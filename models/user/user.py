@@ -1,7 +1,9 @@
 import logging
+
+from bson import ObjectId
 from utils.encryption_utils import EncryptionUtil
-from models.user.db_queries import __dbmanager__
-from models.user.db_queries import update_token
+
+from models.user.db_queries import __dbmanager__, update_token, update_password
 
 class UserModel:
     def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
@@ -84,7 +86,7 @@ class UserModel:
     @classmethod
     def update_password(cls, email, new_password):
         try:
-            __dbmanager__.update_password(email, new_password)
+            update_password(email, new_password)
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
@@ -99,23 +101,40 @@ class UserModel:
                 'status': 'blocked'
             }
             result = __dbmanager__.update_by_condition({'email': user_email}, update_data)
-            if result:
-                logging.info(f"Successfully updated reset password info for user: {user_email}")
-                return True
-            else:
+            if result is None or result.matched_count == 0:
                 logging.warning(f"Failed to update reset password info for user: {user_email}. User not found or no changes made.")
                 return False
+            else:
+                logging.info(f"Successfully updated reset password info for user: {user_email}")
+                return True
+                
         except Exception as e:
             logging.error(f"Error updating reset password info: {str(e)}", exc_info=True)
             raise Exception('Error updating reset password info')
 
     def update_token(user_id, token):
         try:
-            success = update_token(user_id, token)
-            return success
+            object_id = ObjectId(user_id)
         except Exception as e:
-            logging.error(f"Error updating token: {str(e)}", exc_info=True)
+            logging.error(f"Error converting user_id to ObjectId: {e}")
             return False
+
+        condition = {'_id': object_id}
+        new_data = {
+            'token': token,
+            'is_session_active': True
+        }
+
+        result = __dbmanager__.update_by_condition(condition, new_data)
+
+        if isinstance(result, bool):
+            return result  
+
+        if result is None or result.matched_count == 0:
+            logging.error("Token update failed: No matching user or error during update.")
+            return False
+
+        return True
 
     @staticmethod
     def user_activation(email):
