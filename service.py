@@ -6,6 +6,7 @@ from controllers.auth.auth import LoginController
 from controllers.auth.verify_auth import AuthController
 from controllers.auth.refresh_token import RefreshController
 from controllers.rol.rol_controller import RolController
+from controllers.user.user import UserVerificationController
 from controllers.user.UserEnrollment_controller import UserEnrollmentController
 def addServiceLayer(api: Api):
     # Health
@@ -23,3 +24,5 @@ def addServiceLayer(api: Api):
     # User
     api.add_resource(UserEnrollmentController, UserEnrollmentController.route)
     api.add_resource(UserPasswordController, UserPasswordController.route)
+    
+    api.add_resource(UserVerificationController, UserVerificationController.route)

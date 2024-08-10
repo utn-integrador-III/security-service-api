@@ -1,8 +1,6 @@
 import logging
-
 from bson import ObjectId
 from utils.encryption_utils import EncryptionUtil
-
 from models.user.db_queries import __dbmanager__, update_token, update_password
 
 class UserModel:
@@ -59,7 +57,6 @@ class UserModel:
             logging.error(f"Error creating user: {str(e)}", exc_info=True)
             raise Exception('Error creating user')
 
-     
     @staticmethod
     def find_by_email(email):
         try:
@@ -81,7 +78,6 @@ class UserModel:
     def verify_password(plain_password, encrypted_password):
         encryption_util = EncryptionUtil()
         return encryption_util.verify_password(plain_password, encrypted_password)
-
 
     @classmethod
     def update_password(cls, email, new_password):
@@ -135,3 +131,18 @@ class UserModel:
             return False
 
         return True
+
+    @staticmethod
+    def user_activation(email):
+        try:
+            modif = {
+                        'token': '', 
+                        'is_session_active': False,
+                        'status': 'Active',
+                        'expiration_code': None,
+                        'verification_code': ''
+                    }    
+            return __dbmanager__.update_by_condition({'email': email}, modif)
+        except Exception as e:
+            logging.error(f"Error saving user to database: {str(e)}", exc_info=True)
+            raise Exception('Error saving user to database')
