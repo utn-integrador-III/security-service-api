@@ -1,4 +1,4 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from utils.server_response import StatusCode, ServerResponse
 from utils.jwt_manager import validate_jwt, generate_jwt
 from datetime import datetime, timedelta
@@ -6,6 +6,7 @@ from flask import request
 
 class RefreshController(Resource):
     route = '/auth/refresh'
+    
     def post(self):
         # Extract the token directly from the header without checking for "Bearer " prefix
         token = request.headers.get("Authorization")
@@ -27,16 +28,19 @@ class RefreshController(Resource):
 
         # Extract details from the validated token
         subject = result['identity']
-        exp_timestamp = datetime.utcnow() + timedelta(minutes=30)  # Set fixed expiration timestamp for new token
+        role_name = result['rolName']
+        email = result['email']
+        name = result['name']
+        status = result['status']
+        expiration_time = result.get('exp', datetime.utcnow())  # Ensure expiration time is available
+        current_time = datetime.utcnow()
+        grace_period_end = expiration_time + timedelta(minutes=5)  # Grace period for token refresh
 
         # Check if the token is expired
-        expiration_time = datetime.utcnow()
-        grace_period_end = expiration_time + timedelta(minutes=5)  # 5 minutes grace period after expiration
-
-        if expiration_time > exp_timestamp:
-            if expiration_time < grace_period_end:
+        if current_time > expiration_time:
+            if current_time < grace_period_end:
                 # If within grace period, issue a new token
-                new_token = generate_jwt(subject, result['rolName'], result['email'])
+                new_token = generate_jwt(subject, role_name, email, name, status)
                 return ServerResponse(
                     data={'token': new_token},
                     message='Token Refreshed',
@@ -52,7 +56,7 @@ class RefreshController(Resource):
                 ).to_response()
         else:
             # Token not expired, issue a new one anyway for refresh
-            new_token = generate_jwt(subject, result['rolName'], result['email'])
+            new_token = generate_jwt(subject, role_name, email, name, status)
             return ServerResponse(
                 data={'token': new_token},
                 message='Token Refreshed',
