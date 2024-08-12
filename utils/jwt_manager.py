@@ -2,16 +2,18 @@ import jwt
 from datetime import datetime, timedelta
 from decouple import config
 
-def generate_jwt(identity, rolName, email):
+def generate_jwt(identity, rolName, email, name, status):
     """
     Generate a JSON Web Token (JWT) for the given identity with additional details
     """
     payload = {
-        'exp': datetime.utcnow() + timedelta(minutes=30),  # Token expires in 30 minutes
+        'exp': datetime.utcnow() + timedelta(minutes=5), 
         'iat': datetime.utcnow(),
         'sub': identity,
         'rolName': rolName,
-        'email': email
+        'email': email,
+        'name': name,
+        'status': status
     }
     token = jwt.encode(payload, config('JWT_SECRET_KEY'), algorithm='HS256')
     return token
@@ -25,12 +27,15 @@ def validate_jwt(token):
         return {
             'identity': payload['sub'],
             'rolName': payload.get('rolName'),
-            'email': payload.get('email')
+            'email': payload.get('email'),
+            'name': payload.get('name'),
+            'status': payload.get('status') 
         }
     except jwt.ExpiredSignatureError:
         return None
     except jwt.InvalidTokenError:
         return None
+
 
 
 def get_jwt_identity(token):

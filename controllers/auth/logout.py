@@ -1,7 +1,7 @@
+import logging
 from flask_restful import Resource, reqparse
 from models.user.user import UserModel
-from utils.server_response import StatusCode, ServerResponse
-from utils.auth_manager import auth_required
+from utils.server_response import StatusCode
 
 class LogoutController(Resource):
     route = '/auth/logout'
@@ -13,14 +13,29 @@ class LogoutController(Resource):
 
         email = args['email']
 
+        if not isinstance(email, str) or '@' not in email:
+            logging.warning(f"Invalid email format: {email}")
+            return {
+                'message': "Invalid email format",
+                'message_code': "INVALID_EMAIL"
+            }, StatusCode.BAD_REQUEST
+
         user = UserModel.find_by_email(email)
-
         if not user:
-            return ServerResponse(message="The user does not exist", message_code="INVALID_CREDENTIALS", status=StatusCode.BAD_REQUEST)
-        
-        UserModel.logout_user(email)
+            logging.warning(f"User not found with email: {email}")
+            return {
+                'message': "The user does not exist",
+                'message_code': "INVALID_CREDENTIALS"
+            }, StatusCode.BAD_REQUEST
 
-        return {
-            'message': "User has been logged out",
-            'message_code': "USER_LOGGED_OUT"
-        }, StatusCode.OK
+        try:
+            UserModel.logout_user(email)
+            return {
+                'message': "User has been logged out",
+                'message_code': "USER_LOGGED_OUT"
+            }, StatusCode.OK
+        except Exception as e:
+            return {
+                'message': "An error occurred during logout",
+                'message_code': "LOGOUT_ERROR"
+            }, StatusCode.INTERNAL_SERVER_ERROR

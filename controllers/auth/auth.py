@@ -42,7 +42,7 @@ class LoginController(Resource):
                 status=StatusCode.FORBIDDEN
             ).to_response()
 
-        token = generate_jwt(user['id'], user['role'], user['email'])
+        token = generate_jwt(user['id'], user['role'], user['email'], user['name'], user['status'])
 
         # Update user's token in the database
         success = UserModel.update_token(user['id'], token)
