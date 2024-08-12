@@ -8,10 +8,10 @@ class AuthController(Resource):
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('permission', type=str, required=False, help='Permission is optional')
+        parser.add_argument('permission', type=str, required=True, help='Permission is required')
         args = parser.parse_args()
 
-        permission = args.get('permission')
+        permission = args['permission']
         token = request.headers.get("Authorization")
 
         if not token:
@@ -27,18 +27,10 @@ class AuthController(Resource):
 
         if user_data is None:
             return ServerResponse(
-                message="Invalid or expired token",
-                message_code="INVALID_TOKEN",
-                status=StatusCode.UNAUTHORIZED
+                message="User Not valid",
+                message_code="USER_NOT_FOUND",
+                status=StatusCode.BAD_REQUEST
             ).to_response()
-
-        if permission:
-            if not self.has_permission(user_data, permission):
-                return ServerResponse(
-                    message="Permission denied",
-                    message_code="PERMISSION_DENIED",
-                    status=StatusCode.FORBIDDEN
-                ).to_response()
 
         return ServerResponse(
             data=user_data,
@@ -46,7 +38,3 @@ class AuthController(Resource):
             message_code="USER_AUTHENTICATED",
             status=StatusCode.OK
         ).to_response()
-
-    def has_permission(self, user_data, permission):
-        user_permissions = user_data.get('permissions', [])
-        return permission in user_permissions

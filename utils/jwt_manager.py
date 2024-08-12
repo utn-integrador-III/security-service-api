@@ -7,7 +7,7 @@ def generate_jwt(identity, rolName, email, name, status):
     Generate a JSON Web Token (JWT) for the given identity with additional details
     """
     payload = {
-        'exp': datetime.utcnow() + timedelta(minutes=5), 
+        'exp': datetime.utcnow() + timedelta(minutes=30), 
         'iat': datetime.utcnow(),
         'sub': identity,
         'rolName': rolName,

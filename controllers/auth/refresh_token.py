@@ -34,7 +34,7 @@ class RefreshController(Resource):
         status = result['status']
         expiration_time = result.get('exp', datetime.utcnow())  # Ensure expiration time is available
         current_time = datetime.utcnow()
-        grace_period_end = expiration_time + timedelta(minutes=5)  # Grace period for token refresh
+        grace_period_end = expiration_time + timedelta(minutes=30)  # Grace period for token refresh
 
         # Check if the token is expired
         if current_time > expiration_time:
