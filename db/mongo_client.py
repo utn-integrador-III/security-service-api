@@ -50,22 +50,15 @@ class Connection:
             return self.collection.insert_one(data)
         except Exception as e:
             return e
+        
+    def update_by_id(self, id, new_data):
+        try:
+            result = self.collection.update_one({"_id": ObjectId(id)}, {"$set": new_data})
+            return result.modified_count > 0
+        except Exception as e:
+            logging.exception("Error updating data by id: %s", str(e))
+            return False
 
-    def update_data(self, filter_id, new_data):
-        try:
-            self.collection.update_one({"_id": ObjectId(filter_id)}, {"$set": new_data})
-        except Exception as e:
-            return e
-        
-    def update_data(self, id, new_data):
-        try:
-            self.collection.update_one(
-                {"id": id},
-                {"$set": new_data}
-            )
-        except Exception as e:
-            return e
-        
     def update_by_condition(self, condition, new_data):
         try:
             return self.collection.update_one(condition, {"$set": new_data})
