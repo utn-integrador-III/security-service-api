@@ -82,7 +82,13 @@ class UserModel:
     @classmethod
     def update_password(cls, email, new_password):
         try:
-            update_password(email, new_password)
+            result = __dbmanager__.update_by_condition(
+                {"email": email},
+                {"password": new_password}
+            )
+        
+            if not result:
+                raise Exception("Failed to update password in the database")
         except Exception as e:
             logging.error(f"Error updating password: {str(e)}", exc_info=True)
             raise Exception('Error updating password')
