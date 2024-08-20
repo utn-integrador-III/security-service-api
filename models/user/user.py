@@ -152,3 +152,18 @@ class UserModel:
         except Exception as e:
             logging.error(f"Error saving user to database: {str(e)}", exc_info=True)
             raise Exception('Error saving user to database')
+        
+    @staticmethod
+    def update_user(email, update_data):
+        try:
+            result = __dbmanager__.update_by_condition({'email': email}, update_data)
+            if result is None or result.matched_count == 0:
+                logging.warning(f"Failed to update user: {email}. User not found or no changes made.")
+                return False
+            else:
+                logging.info(f"Successfully updated user: {email}")
+                return True
+                
+        except Exception as e:
+            logging.error(f"Error updating user: {str(e)}", exc_info=True)
+            raise Exception('Error updating user')

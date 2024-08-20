@@ -57,12 +57,36 @@ class UserEnrollmentController(Resource):
                 # Verificar si el usuario ya existe
                 existing_user = UserModel.find_by_email(email)
                 if existing_user:
-                    return ServerResponse(
-                        message="The user is already registered",
-                        message_code=USER_ALREADY_REGISTERED,
-                        status=StatusCode.CONFLICT
-                    ).to_response()
+                    if existing_user['status'] == 'Pending':
+                        # Generar un nuevo código de verificación y actualizar en la BD
+                        verification_code = random.randint(100000, 999999)
+                        expiration_code = datetime.utcnow() + timedelta(minutes=5)
+                        
+                        # Actualizar el usuario en la base de datos
+                        update_data = {
+                            'verification_code': verification_code,
+                            'expiration_code': expiration_code,
+                            'status': 'Pending'
+                        }
+                        UserModel.update_user(email, update_data)
 
+                        # Enviar el nuevo código de verificación por correo
+                        send_email(email, verification_code)
+
+                        return ServerResponse(
+                            data=None,
+                            message="Verification code reset successfully, please check your email",
+                            message_code=CREATED,
+                            status=StatusCode.CREATED,
+                        ).to_response()
+                    else:
+                        return ServerResponse(
+                            message="The user is already registered",
+                            message_code=USER_ALREADY_REGISTERED,
+                            status=StatusCode.CONFLICT
+                        ).to_response()
+                    
+                    
                 # Obtener roles activos y el rol predeterminado
                 active_roles, default_role = RoleModel.find_active_and_default_roles()
 
