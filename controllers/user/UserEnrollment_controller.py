@@ -75,7 +75,7 @@ class UserEnrollmentController(Resource):
 
                         return ServerResponse(
                             data=None,
-                            message="Verification code reset successfully, please check your email",
+                            message="It seems that your user is already register, sending another verification code, please check your email",
                             message_code=CREATED,
                             status=StatusCode.CREATED,
                         ).to_response()
