@@ -575,10 +575,12 @@ paths:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
               - properties:
+                  data:
+                    $ref: "#/definitions/UserPost"
                   message:
-                    example: "All fields are required: user_email, old_password, new_password, confirm_password"
+                    example: "Server Couldn't Process the Request"
                   message_code:
-                    example: "MISSING_REQUIRED_FIELDS"
+                    example: "BAD_REQUEST"
         "401":
           description: "Unauthorized"
           schema:
@@ -650,7 +652,15 @@ paths:
         "400":
           description: "Bad Request"
           schema:
-            $ref: "#/definitions/ErrorResponse"
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  data:
+                    $ref: "#/definitions/UserPost"
+                  message:
+                    example: "Server Couldn't Process the Request"
+                  message_code:
+                    example: "BAD_REQUEST"
         "404":
           description: "User not found"
           schema:
@@ -707,10 +717,12 @@ paths:
             allOf:
               - $ref: "#/definitions/ErrorResponse"
               - properties:
+                  data:
+                    $ref: "#/definitions/UserPost"
                   message:
-                    example: "All fields are required: user_email, verification_code"
+                    example: "Server Couldn't Process the Request"
                   message_code:
-                    example: "MISSING_REQUIRED_FIELDS"
+                    example: "BAD_REQUEST"
         "401":
           description: "Unauthorized"
           schema:
