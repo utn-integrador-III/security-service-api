@@ -13,13 +13,15 @@ class HealthController(Resource):
     Get heath
     """
     def get(self):
+        response=None
         try:
             # Check connection status
             info_db= HealthModel.getInfoDB()
-            return ServerResponse(message='Connection to DB is OK',
-                                        message_code=HEALTH_SUCCESSFULLY, status=StatusCode.OK)         
+            response = ServerResponse(message='Connection to DB is OK',
+                                        message_code=HEALTH_SUCCESSFULLY, status=StatusCode.OK)      
         except Exception as ex:
             print(ex)
             logging.exception(ex)
-            return ServerResponse(message='Connection to DB is not possible.',
+            response = ServerResponse(message='Connection to DB is not possible.',
                                       message_code=HEALTH_NOT_FOUND, status=StatusCode.NOT_FOUND)
+        return response.to_response()
