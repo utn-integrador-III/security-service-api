@@ -13,7 +13,6 @@ class AuthController(Resource):
 
         permission = args['permission']
         token = request.headers.get("Authorization")
-
         if not token:
             return ServerResponse(
                 data=None,
@@ -24,7 +23,6 @@ class AuthController(Resource):
 
         # Validate JWT
         user_data = validate_jwt(token)
-
         if user_data is None:
             return ServerResponse(
                 message="User Not valid",
