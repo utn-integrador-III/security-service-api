@@ -23,6 +23,7 @@ def validate_jwt(token):
     Validate a JSON Web Token (JWT) and return the payload
     """
     try:
+        token = token.replace("Bearer", "").strip()  # Remove 'Bearer' prefix if present
         payload = jwt.decode(token, config('JWT_SECRET_KEY'), algorithms=['HS256'])
         return {
             'identity': payload['sub'],
@@ -32,11 +33,11 @@ def validate_jwt(token):
             'status': payload.get('status') 
         }
     except jwt.ExpiredSignatureError:
+        print("JWT has expired")
         return None
     except jwt.InvalidTokenError:
+        print("Invalid JWT token")
         return None
-
-
 
 def get_jwt_identity(token):
     """
