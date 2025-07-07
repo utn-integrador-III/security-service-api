@@ -9,3 +9,8 @@ python-dotenv==0.17.1
 pytest
 python-decouple==3.4
 gunicorn==20.1.0
+cryptography
+PyJWT
+email_validator
+validate_email
+python-dateutil
