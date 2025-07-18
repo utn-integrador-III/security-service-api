@@ -8,6 +8,7 @@ import logging
 
 # ✅ Corrección en la importación
 from controllers.user.security_user_enrollment import register_security_user
+from controllers.rol.rol_controller import RolController
 
 app = Flask(__name__)
 app.debug = config('FLASK_DEBUG', cast=bool)
@@ -23,6 +24,10 @@ addServiceLayer(api)
 @app.route('/security-user/register', methods=['POST'])
 def security_user_register():
     return register_security_user()
+
+@app.route('/roleByUser/<string:email>/<string:app>', methods=['GET'])
+def get_roles_by_user_and_app(email, app):
+    return RolController.get_roles_by_user_and_app(email, app)
 
 if __name__ == "__main__":
     app.run(host=config('FLASK_RUN_HOST'), port=config('SECURITY_SERVICE_PORT'))
