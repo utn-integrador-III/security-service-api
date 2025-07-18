@@ -26,3 +26,4 @@ class RolParser:
                     parser.error(f'permissions not provided')
 
         return args
+
