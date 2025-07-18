@@ -29,5 +29,10 @@ def security_user_register():
 def get_roles_by_user_and_app(email, app):
     return RolController.get_roles_by_user_and_app(email, app)
 
+
+#endpoint post of the role
+@app.route('/role/<string:client_id>/create', methods=['POST'])
+def post_role(client_id):
+    return RolController.post_role(client_id)
 if __name__ == "__main__":
     app.run(host=config('FLASK_RUN_HOST'), port=config('SECURITY_SERVICE_PORT'))

@@ -5,6 +5,10 @@ from models.role.role import RoleModel
 from models.user.user import UserModel
 from .parser import RolParser
 import logging
+from datetime import datetime
+
+from models.application.getapp import ApplicationModel
+from models.role.role import RoleModel
 
 class RolController(Resource):
     route = "/rol"
@@ -112,6 +116,72 @@ class RolController(Resource):
         except Exception as ex:
             print("ERROR en get_roles_by_user_and_app:", ex)
             logging.error(ex)
+            return ServerResponse(
+                message="Internal server error",
+                message_code="INTERNAL_SERVER_ERROR",
+                status=StatusCode.INTERNAL_SERVER_ERROR
+            ).to_response()
+    
+
+    #POST ROLL new endpoint
+   
+    @staticmethod
+    def post_role(client_id):
+        try:
+            data = request.get_json()
+            name = data.get('name')
+            description = data.get('description', '')
+            permissions = data.get('permissions', [])
+
+            # Validación del nombre
+            if not name or len(name.strip()) < 2:
+                return ServerResponse(
+                    message="Invalid role name",
+                    message_code="INVALID_NAME",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Validación de permisos
+            if not isinstance(permissions, list):
+                return ServerResponse(
+                    message="Permissions must be a list",
+                    message_code="INVALID_PERMISSIONS",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Verificar que la app exista por client_id
+            app = ApplicationModel().find_by_client_id(client_id)
+            if not app:
+                return ServerResponse(
+                    message="Application not found",
+                    message_code="APP_NOT_FOUND",
+                    status=StatusCode.NOT_FOUND
+                ).to_response()
+
+            # Crear objeto del rol completo según estructura del modelo
+            role_data = {
+                "name": name.strip(),
+                "description": description.strip(),
+                "permissions": permissions,
+                "creation_date": datetime.utcnow(),
+                "mod_date": datetime.utcnow(),
+                "is_active": True,
+                "default_role": False,
+                "screens": [],                   # Vacío por defecto
+                "app": app["name"]              
+            }
+
+            new_role = RoleModel.create(role_data)
+
+            return ServerResponse(
+                data=new_role,
+                message="Role created successfully",
+                message_code="CREATED",
+                status=StatusCode.CREATED
+            ).to_response()
+
+        except Exception as e:
+            logging.error(f"Error creating role: {str(e)}", exc_info=True)
             return ServerResponse(
                 message="Internal server error",
                 message_code="INTERNAL_SERVER_ERROR",

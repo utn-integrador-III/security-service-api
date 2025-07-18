@@ -60,3 +60,16 @@ class RoleModel:
             logging.exception(ex)
             raise Exception("Failed to get rol by name: " + str(ex))
     
+
+    @classmethod
+    def create(cls, role_data):
+        try:
+            result = __dbmanager__.create_data(role_data)
+            if result.inserted_id:
+                role_data["_id"] = result.inserted_id
+                return cls(**role_data)
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Error creating role: " + str(ex))
+    
