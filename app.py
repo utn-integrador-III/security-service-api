@@ -25,6 +25,7 @@ addServiceLayer(api)
 def security_user_register():
     return register_security_user()
 
+# Get user roles for a specific application
 @app.route('/roleByUser/<string:email>/<string:app>', methods=['GET'])
 def get_roles_by_user_and_app(email, app):
     return RolController.get_roles_by_user_and_app(email, app)
