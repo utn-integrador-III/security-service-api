@@ -19,25 +19,34 @@ class UserEnrollmentController(Resource):
         try:
             data = request.json
             name = data.get('name')
-            password = data.get('password')
             email = data.get('email')
+            password = data.get('password')
+            apps_data = data.get('apps', [])
 
-            # Validar email
+            # Validate required fields
+            if not all([name, email, password]) or not apps_data:
+                return ServerResponse(
+                    message="Fields 'name', 'email', 'password', and at least one 'app' are required.",
+                    status=StatusCode.BAD_REQUEST
+                ).to_response()
+
+            # Validate email
             if not email or not validate_email(email):
                 return ServerResponse(
                     message="The provided email is not valid",
                     message_code=INVALID_EMAIL_DOMAIN,
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
-
-            if not any(domain in email for domain in ['utn.ac.cr', 'est.utn.ac.cr', 'adm.utn.ac.cr']):
+            
+            # Validate specific domain required for email
+            """if not any(domain in email for domain in ['utn.ac.cr', 'est.utn.ac.cr', 'adm.utn.ac.cr']):
                 return ServerResponse(
                     message="The entered domain does not meet the established standards",
                     message_code=INVALID_EMAIL_DOMAIN,
                     status=StatusCode.UNPROCESSABLE_ENTITY
-                ).to_response()
+                ).to_response()"""
 
-            # Validar nombre
+            # Validate name
             if not name or len(name.strip()) < 2:
                 return ServerResponse(
                     message="The name does not meet the established standards",
@@ -45,7 +54,7 @@ class UserEnrollmentController(Resource):
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
 
-            # Validar contraseña
+            # Validate password
             if not password or len(password) < 8:
                 return ServerResponse(
                     message="The password does not meet the established standards",
@@ -54,84 +63,72 @@ class UserEnrollmentController(Resource):
                 ).to_response()
 
             try:
-                # Verificar si el usuario ya existe
+                # Search if the user already exists
                 existing_user = UserModel.find_by_email(email)
+
+                # Generate code and expiration for each app
+                for app in apps_data:
+                    app["code"] = str(random.randint(100000, 999999))
+                    app["token"] = ""
+                    app["status"] = "Pending"
+                    expiration_code = datetime.utcnow() + timedelta(minutes=5)
+                    app["code_expliration"] = expiration_code.strftime("%Y/%m/%d %H:%M:%S")
+
                 if existing_user:
-                    if existing_user['status'] == 'Pending':
-                        # Generar un nuevo código de verificación y actualizar en la BD
-                        verification_code = random.randint(100000, 999999)
-                        expiration_code = datetime.utcnow() + timedelta(minutes=5)
-                        
-                        # Actualizar el usuario en la base de datos
+                    user_apps = existing_user.get("apps", [])
+                    updated = False
+
+                    for new_app in apps_data:
+                        already_exists = any(
+                            app["role"] == new_app["role"] and app["app"] == new_app["app"]
+                            for app in user_apps
+                        )
+                        if already_exists:
+                            return ServerResponse(
+                                message=f"User already assigned to role '{new_app['role']}' and app '{new_app['app']}'.",
+                                status=StatusCode.CONFLICT
+                            ).to_response()
+                        else:
+                            user_apps.append(new_app)
+                            updated = True
+                            send_email(email, new_app["code"])
+
+                    if updated:
                         update_data = {
-                            'verification_code': verification_code,
-                            'expiration_code': expiration_code,
-                            'status': 'Pending'
+                            "apps": user_apps,
+                            "status": "Pending"
                         }
                         UserModel.update_user(email, update_data)
 
-                        # Enviar el nuevo código de verificación por correo
-                        send_email(email, verification_code)
-
                         return ServerResponse(
                             data=None,
-                            message="It seems that your user is already register, sending another verification code, please check your email",
+                            message="User updated with new role(s) and app(s). Verification code(s) sent.",
                             message_code=CREATED,
-                            status=StatusCode.CREATED,
+                            status=StatusCode.OK
                         ).to_response()
-                    else:
-                        return ServerResponse(
-                            message="The user is already registered",
-                            message_code=USER_ALREADY_REGISTERED,
-                            status=StatusCode.CONFLICT
-                        ).to_response()
-                    
-                    
-                # Obtener roles activos y el rol predeterminado
-                active_roles, default_role = RoleModel.find_active_and_default_roles()
 
-                # Validar que haya al menos un rol activo
-                if not active_roles:
-                    return ServerResponse(
-                        message="No active roles found",
-                        message_code=NO_ACTIVE_ROLES_FOUND,
-                        status=StatusCode.UNPROCESSABLE_ENTITY
-                    ).to_response()
-
-                # Validar que se haya encontrado un rol predeterminado
-                if not default_role:
-                    return ServerResponse(
-                        message="Default role not found",
-                        message_code=DEFAULT_ROLE_NOT_FOUND,
-                        status=StatusCode.INTERNAL_SERVER_ERROR
-                    ).to_response()
-
-                # Generar código de verificación y código de expiración
-                verification_code = random.randint(100000, 999999)
-                expiration_code = datetime.utcnow() + timedelta(minutes=5)
-
-                # Crear nuevo usuario
+                # Create new user with complete structure
                 user_data = {
-                    'name': name,
-                    'password': password,
-                    'email': email,
-                    'status': 'Pending',
-                    'verification_code': verification_code,
-                    'expiration_code': expiration_code,
-                    'role': default_role['name'],
-                    'token': "",
-                    'is_session_active': False
+                    "name": name,
+                    "password": password,
+                    "email": email,
+                    "status": "Pending",
+                    "apps": apps_data,
+                    "is_session_active": False
                 }
 
-                new_user = UserModel.create_user(user_data)
-                send_email(email, verification_code)
+                UserModel.create_user(user_data)
+
+                for app in apps_data:
+                    send_email(email, app["code"])
 
                 return ServerResponse(
                     data=None,
-                    message="User created successfully",
+                    message="User created successfully and verification code(s) sent.",
                     message_code=CREATED,
-                    status=StatusCode.CREATED,
+                    status=StatusCode.CREATED
                 ).to_response()
+
             except Exception as e:
                 logging.error(f"Error creating user: {str(e)}", exc_info=True)
                 return ServerResponse(

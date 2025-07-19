@@ -167,20 +167,46 @@ definitions:
   UserPost:
     type: object
     required:
-      - "name"
-      - "email"
-      - "password"
-      - "role"
+      - name
+      - email
+      - password
+      - apps
     properties:
       name:
         type: string
         example: "John Allen Valerin"
-      password:
-        type: string
-        example: "484UTN"
       email:
         type: string
         example: "jhonallen@est.utn.ac.cr"
+      password:
+        type: string
+        example: "QRe1bcPoER_BGAH_CA6zNr_UYhtbPb9CZVJhjvKRUeHX7VqVus59jaDoAqJ5JBI"
+      apps:
+        type: array
+        items:
+          type: object
+          required:
+            - role
+            - app
+          properties:
+            role:
+              type: string
+              example: "vehiculo/solicitante"
+            app:
+              type: string
+              example: "vehiculos"
+            token:
+              type: string
+              example: ""
+            code:
+              type: string
+              example: "138546"
+            code_expliration:
+              type: string
+              example: "2025/06/28 16:35:00"
+            status:
+              type: string
+              example: "Pending"          
   RoleGet:
     type: object
     properties:
