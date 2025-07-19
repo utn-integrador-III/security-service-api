@@ -4,15 +4,12 @@ from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__, update_token, update_password
 
 class UserModel:
-    def __init__(self, name, password, email, status, verification_code, expiration_code, role, token="", is_session_active=False):
+    def __init__(self, name, password, email, status, apps, is_session_active=False):
         self.name = name
         self.password = password
         self.email = email
         self.status = status
-        self.verification_code = verification_code
-        self.expiration_code = expiration_code
-        self.role = role
-        self.token = token
+        self.apps = apps
         self.is_session_active = is_session_active
     
     def to_dict(self):
@@ -21,10 +18,7 @@ class UserModel:
             'email': self.email,
             'password': self.password,
             'status': self.status,
-            'verification_code': self.verification_code,
-            'expiration_code': self.expiration_code,
-            'role': self.role,
-            'token': self.token,
+            'apps': self.apps,
             'is_session_active': self.is_session_active
         }
     
@@ -39,17 +33,13 @@ class UserModel:
             result = __dbmanager__.create_data(user_data)
             
             if result:
-                # Create UserModel instance with expected fields
                 return cls(
                     name=user_data['name'],
                     password=user_data['password'],
                     email=user_data['email'],
                     status=user_data['status'],
-                    verification_code=user_data['verification_code'],
-                    expiration_code=user_data['expiration_code'],
-                    role=user_data['role'],
-                    token=user_data['token'],
-                    is_session_active=user_data['is_session_active']
+                    apps=user_data['apps'],
+                    is_session_active=user_data.get('is_session_active', False)
                 )
             else:
                 raise Exception("Failed to create user in database")
@@ -70,7 +60,7 @@ class UserModel:
     @staticmethod
     def logout_user(email):
         try:
-             __dbmanager__.update_by_condition({'email': email}, {'token': '', 'is_session_active': False})
+            __dbmanager__.update_by_condition({'email': email}, {'is_session_active': False})
         except Exception as e:
             raise Exception(f"Error logging out user: {str(e)}")
 
@@ -97,10 +87,9 @@ class UserModel:
     def update_reset_password_info(user_email, verification_code, expiration_time, encrypted_temp_password):
         try:
             update_data = {
-                'verification_code': verification_code,
-                'expiration_code': expiration_time,
                 'password': encrypted_temp_password,
-                'status': 'blocked'
+                'status': 'blocked',
+                # In case you use code verification again, you should add it to each `app`.
             }
             result = __dbmanager__.update_by_condition({'email': user_email}, update_data)
             if result is None or result.matched_count == 0:
@@ -109,11 +98,11 @@ class UserModel:
             else:
                 logging.info(f"Successfully updated reset password info for user: {user_email}")
                 return True
-                
         except Exception as e:
             logging.error(f"Error updating reset password info: {str(e)}", exc_info=True)
             raise Exception('Error updating reset password info')
 
+    @staticmethod
     def update_token(user_id, token):
         try:
             object_id = ObjectId(user_id)
@@ -142,12 +131,10 @@ class UserModel:
     def user_activation(email):
         try:
             modif = {
-                        'token': '', 
-                        'is_session_active': False,
-                        'status': 'Active',
-                        'expiration_code': None,
-                        'verification_code': ''
-                    }    
+                'is_session_active': False,
+                'status': 'Active'
+                # If you need to modify the states of the apps or tokens, you should update the apps array as well.
+            }
             return __dbmanager__.update_by_condition({'email': email}, modif)
         except Exception as e:
             logging.error(f"Error saving user to database: {str(e)}", exc_info=True)
@@ -163,7 +150,6 @@ class UserModel:
             else:
                 logging.info(f"Successfully updated user: {email}")
                 return True
-                
         except Exception as e:
             logging.error(f"Error updating user: {str(e)}", exc_info=True)
             raise Exception('Error updating user')
