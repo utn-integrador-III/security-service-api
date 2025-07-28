@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import random
 from datetime import datetime, timedelta
 from utils.email_manager import send_email
+import uuid
 
 # Cargar variables de entorno
 load_dotenv()
@@ -34,13 +35,14 @@ def register_security_user():
     verification_code = random.randint(100000, 999999)
     expiration_code = datetime.utcnow() + timedelta(minutes=5)
 
-    # Procesar apps para agregar campos de verificación
+    # Procesar apps para agregar campos de verificación y app_id
     apps = data["apps"]
     for app in apps:
         app.setdefault("code", str(verification_code))
         app.setdefault("token", "")
         app.setdefault("status", "Pending")
         app.setdefault("code_expliration", expiration_code.strftime("%Y/%m/%d %H:%M:%S"))
+        app.setdefault("app_id", str(uuid.uuid4()))  # Generar ID único para cada app
 
     user_data = {
         "name": data["name"],
@@ -49,7 +51,10 @@ def register_security_user():
         "apps": apps,
         "status": "Pending",
         "token": "",
-        "is_session_active": False
+        "is_session_active": False,
+        "current_app_id": None,
+        "current_app": None,
+        "last_login": None
     }
 
     result = collection.insert_one(user_data)

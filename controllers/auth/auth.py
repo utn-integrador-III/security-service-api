@@ -9,6 +9,8 @@ import bcrypt
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+import uuid
+from datetime import datetime
 
 # Cargar variables de entorno para conexión directa a MongoDB
 load_dotenv()
@@ -93,6 +95,7 @@ class LoginController(Resource):
         user_has_access_to_app = False
         user_role = None
         user_app_data = None
+        app_id = None
 
         if user.get('apps') and len(user['apps']) > 0:
             # Usuario de security (tiene apps)
@@ -101,12 +104,15 @@ class LoginController(Resource):
                     user_has_access_to_app = True
                     user_role = app.get('role', "vehiculos/solicitante")
                     user_app_data = app
+                    # Generar o usar ID de app existente
+                    app_id = app.get('app_id', str(uuid.uuid4()))
                     break
         else:
             # Usuario normal - por ahora asumimos que tiene acceso a todas las apps
             # En el futuro se puede implementar validación específica
             user_has_access_to_app = True
             user_role = user.get('role', "vehiculos/solicitante")
+            app_id = str(uuid.uuid4())  # Generar ID para usuario normal
 
         if not user_has_access_to_app:
             return ServerResponse(
@@ -117,12 +123,40 @@ class LoginController(Resource):
 
         token = generate_jwt(user['id'], user_role, user['email'], user['name'], user['status'])
 
-        # Update user's token in the database
+        # Update user's token and app_id in the database
         if user.get('password', '').startswith('$2b$'):  # Usuario de security
-            security_collection.update_one(
-                {"email": email}, 
-                {"$set": {"token": token, "is_session_active": True}}
-            )
+            # Actualizar la app específica con el app_id
+            if user_app_data:
+                user_app_data['app_id'] = app_id
+                user_app_data['last_login'] = datetime.utcnow().isoformat()
+                
+                # Actualizar en la base de datos
+                security_collection.update_one(
+                    {"email": email}, 
+                    {
+                        "$set": {
+                            "token": token, 
+                            "is_session_active": True,
+                            "current_app_id": app_id,
+                            "current_app": requested_app,
+                            "last_login": datetime.utcnow().isoformat()
+                        },
+                        "$set": {"apps": user['apps']}
+                    }
+                )
+            else:
+                security_collection.update_one(
+                    {"email": email}, 
+                    {
+                        "$set": {
+                            "token": token, 
+                            "is_session_active": True,
+                            "current_app_id": app_id,
+                            "current_app": requested_app,
+                            "last_login": datetime.utcnow().isoformat()
+                        }
+                    }
+                )
         else:  # Usuario normal
             success = UserModel.update_token(user['id'], token)
             if not success:
@@ -131,6 +165,13 @@ class LoginController(Resource):
                     message_code="TOKEN_UPDATE_FAILED",
                     status=StatusCode.INTERNAL_SERVER_ERROR
                 ).to_response()
+            
+            # También actualizar app_id para usuarios normales
+            UserModel.update_user(email, {
+                "current_app_id": app_id,
+                "current_app": requested_app,
+                "last_login": datetime.utcnow().isoformat()
+            })
         
         # Obtener información del rol desde la base de datos de roles
         role_object = RoleModel.get_by_name(user_role)
@@ -157,7 +198,8 @@ class LoginController(Resource):
                 "status": user['status'],
                 "role": filtered_role_data,
                 "token": token,
-                "app": requested_app
+                "app": requested_app,
+                "app_id": app_id
             },
             'message': "User has been authenticated",
             'message_code': "USER_AUTHENTICATED"
