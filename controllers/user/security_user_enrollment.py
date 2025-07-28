@@ -3,6 +3,9 @@ from pymongo import MongoClient
 import bcrypt
 import os
 from dotenv import load_dotenv
+import random
+from datetime import datetime, timedelta
+from utils.email_manager import send_email
 
 # Cargar variables de entorno
 load_dotenv()
@@ -27,12 +30,39 @@ def register_security_user():
 
     hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
 
+    # Generar código de verificación y expiración
+    verification_code = random.randint(100000, 999999)
+    expiration_code = datetime.utcnow() + timedelta(minutes=5)
+
+    # Procesar apps para agregar campos de verificación
+    apps = data["apps"]
+    for app in apps:
+        app.setdefault("code", str(verification_code))
+        app.setdefault("token", "")
+        app.setdefault("status", "Pending")
+        app.setdefault("code_expliration", expiration_code.strftime("%Y/%m/%d %H:%M:%S"))
+
     user_data = {
         "name": data["name"],
         "password": hashed_password.decode('utf-8'),
         "email": data["email"],
-        "apps": data["apps"]
+        "apps": apps,
+        "status": "Pending",
+        "token": "",
+        "is_session_active": False
     }
 
     result = collection.insert_one(user_data)
-    return jsonify({"message": "Usuario registrado correctamente", "id": str(result.inserted_id)}), 201
+    
+    # Enviar el código por email
+    try:
+        send_email(data["email"], verification_code)
+    except Exception as e:
+        # Si falla el envío de email, eliminar el usuario creado
+        collection.delete_one({"_id": result.inserted_id})
+        return jsonify({"error": "Error al enviar el código de verificación por email"}), 500
+    
+    return jsonify({
+        "message": "Usuario registrado correctamente. Se ha enviado un código de verificación a tu email.", 
+        "id": str(result.inserted_id)
+    }), 201

@@ -102,6 +102,7 @@ definitions:
     required:
       - email
       - password
+      - app
     properties:
       email:
         type: "string"
@@ -109,6 +110,9 @@ definitions:
       password:
         type: "string"
         example: "Aleja123#"
+      app:
+        type: "string"
+        example: "vehiculos"
   AuthRefresh:
     type: "object"
     required:
@@ -325,6 +329,9 @@ paths:
                   token:
                     type: "string"
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7Lrr18H9LAk"
+                  app:
+                    type: "string"
+                    example: "vehiculos"
               message:
                 type: "string"
                 example: "User has been authenticated"
@@ -342,6 +349,7 @@ paths:
                   - "Invalid email domain"
                   - "Invalid email or password"
                   - "User is not active"
+                  - "User does not have access to the requested app"
                 example: "Invalid email domain"
               message_code:
                 type: string
@@ -349,6 +357,7 @@ paths:
                   - "INVALID_EMAIL_DOMAIN"
                   - "INVALID_CREDENTIALS"
                   - "USER_NOT_ACTIVE"
+                  - "USER_APP_ACCESS_DENIED"
                 example: "INVALID_EMAIL_DOMAIN"
        "500":
           description: "Internal Server Error"
