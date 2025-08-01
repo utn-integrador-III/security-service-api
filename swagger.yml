@@ -102,6 +102,7 @@ definitions:
     required:
       - email
       - password
+      - app
     properties:
       email:
         type: "string"
@@ -109,6 +110,21 @@ definitions:
       password:
         type: "string"
         example: "Aleja123#"
+      app:
+        type: "string"
+        example: "vehiculos"
+  ActivationPost:
+    type: "object"
+    required:
+      - email
+      - activation_code
+    properties:
+      email:
+        type: "string"
+        example: "aaron.test@utn.ac.cr"
+      activation_code:
+        type: "string"
+        example: "123456"
   AuthRefresh:
     type: "object"
     required:
@@ -325,6 +341,12 @@ paths:
                   token:
                     type: "string"
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7Lrr18H9LAk"
+                  app:
+                    type: "string"
+                    example: "vehiculos"
+                  app_id:
+                    type: "string"
+                    example: "550e8400-e29b-41d4-a716-446655440000"
               message:
                 type: "string"
                 example: "User has been authenticated"
@@ -342,6 +364,7 @@ paths:
                   - "Invalid email domain"
                   - "Invalid email or password"
                   - "User is not active"
+                  - "User does not have access to the requested app"
                 example: "Invalid email domain"
               message_code:
                 type: string
@@ -349,6 +372,7 @@ paths:
                   - "INVALID_EMAIL_DOMAIN"
                   - "INVALID_CREDENTIALS"
                   - "USER_NOT_ACTIVE"
+                  - "USER_APP_ACCESS_DENIED"
                 example: "INVALID_EMAIL_DOMAIN"
        "500":
           description: "Internal Server Error"
@@ -478,6 +502,91 @@ paths:
                   - "DEFAULT_ROLE_NOT_FOUND"
                   - "INVALID_ROLE"
                 example: "INVALID_EMAIL_DOMAIN"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            $ref: "#/definitions/InternalErrorResponse"
+  /user/activate:
+    post:
+      tags:
+        - "Users"
+      summary: "Activate User Account"
+      description: "Activate user account using verification code sent to email"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Activation code and email"
+          required: true
+          schema:
+            $ref: '#/definitions/ActivationPost'
+      responses:
+        "200":
+          description: "Account activated successfully"
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "object"
+                properties:
+                  email:
+                    type: "string"
+                    example: "aaron.test@utn.ac.cr"
+                  status:
+                    type: "string"
+                    example: "Active"
+                  message:
+                    type: "string"
+                    example: "Account activated successfully"
+              message:
+                type: "string"
+                example: "Account activated successfully"
+              message_code:
+                type: "string"
+                example: "VERIFICATION_SUCCESSFUL"
+        "400":
+          description: "Bad Request - Missing required fields"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Email and activation code are required"
+                  message_code:
+                    example: "MISSING_REQUIRED_FIELDS"
+        "401":
+          description: "Unauthorized - Invalid or expired code"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Invalid activation code"
+                  message_code:
+                    example: "INVALID_VERIFICATION_CODE"
+        "403":
+          description: "Forbidden - Code expired"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "Activation code expired"
+                  message_code:
+                    example: "VERIFICATION_EXPIRED"
+        "404":
+          description: "Not Found - User not found"
+          schema:
+            allOf:
+              - $ref: "#/definitions/ErrorResponse"
+              - properties:
+                  message:
+                    example: "User not found"
+                  message_code:
+                    example: "USER_NOT_FOUND"
         "500":
           description: "Internal Server Error"
           schema:
