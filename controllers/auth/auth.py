@@ -139,9 +139,9 @@ class LoginController(Resource):
                             "is_session_active": True,
                             "current_app_id": app_id,
                             "current_app": requested_app,
-                            "last_login": datetime.utcnow().isoformat()
-                        },
-                        "$set": {"apps": user['apps']}
+                            "last_login": datetime.utcnow().isoformat(),
+                            "apps": user['apps']
+                        }
                     }
                 )
             else:

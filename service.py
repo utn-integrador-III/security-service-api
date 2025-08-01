@@ -9,7 +9,9 @@ from controllers.rol.rol_controller import RolController
 from controllers.user.UserVerificationController import UserVerificationController
 from controllers.user.UserActivationController import UserActivationController
 from controllers.user.UserAppController import UserAppController
+from controllers.user.UserRoleController import UserRoleController
 from controllers.user.UserEnrollment_controller import UserEnrollmentController
+from controllers.rol.role_creation_controller import RoleCreationController
 def addServiceLayer(api: Api):
     # Health
     api.add_resource(HealthController, HealthController.route)
@@ -20,6 +22,7 @@ def addServiceLayer(api: Api):
     api.add_resource(RefreshController, RefreshController.route)
     # Rol
     api.add_resource(RolController, RolController.route)
+    api.add_resource(RoleCreationController, RoleCreationController.route)
 
     #Logout
     api.add_resource(LogoutController,LogoutController.route)
@@ -30,3 +33,4 @@ def addServiceLayer(api: Api):
     api.add_resource(UserVerificationController, UserVerificationController.route)
     api.add_resource(UserActivationController, UserActivationController.route)
     api.add_resource(UserAppController, UserAppController.route)
+    api.add_resource(UserRoleController, UserRoleController.route)

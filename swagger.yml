@@ -281,6 +281,55 @@ definitions:
           - "LostObject/Report"
           - "Lab/BookingComputer"
           - "Lab/Issue"
+  RoleCreationPost:
+    type: object
+    required:
+      - "name"
+      - "permissions"
+      - "app"
+    properties:
+      name:
+        type: string
+        example: "vehiculos/admin"
+        description: "Role name"
+      permissions:
+        type: array
+        items:
+          type: string
+        example:
+          - "Write"
+          - "Read"
+          - "Delete"
+          - "Update"
+          - "LostOBJECTMNG"
+          - "issue_managment"
+        description: "List of permissions for the role"
+      app:
+        type: string
+        example: "vehiculos"
+        description: "Application this role belongs to"
+      description:
+        type: string
+        example: ""
+        description: "Role description (optional)"
+        default: ""
+      screens:
+        type: array
+        items:
+          type: string
+        example: []
+        description: "List of screens accessible by this role (optional)"
+        default: []
+      is_active:
+        type: boolean
+        example: true
+        description: "Whether the role is active"
+        default: true
+      default_role:
+        type: boolean
+        example: false
+        description: "Whether this is a default role"
+        default: false
 #The paths are the ones with all the information of the CRUD methods of the end-points
 paths:
   /auth/login:
@@ -775,7 +824,7 @@ paths:
           schema:
             $ref: "#/definitions/InternalErrorResponse"
   /user/verification:
-    put:
+    post:
       tags:
         - "Users"
       summary: "Verify user account"
@@ -1110,6 +1159,295 @@ paths:
           description: "Internal Server Error"
           schema:
             $ref: "#/definitions/InternalErrorResponse"
+  /roles/create:
+    post:
+      tags:
+        - "Roles"
+      summary: "Create a new role"
+      description: "Create a new role with permissions and screen access"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Role creation data"
+          required: true
+          schema:
+            $ref: "#/definitions/RoleCreationPost"
+      responses:
+        "201":
+          description: "Role created successfully"
+          schema:
+            type: "object"
+            properties:
+              data:
+                type: "object"
+                properties:
+                  _id:
+                    type: "string"
+                    example: "6886ffc2ed51b7cd81a38ff2"
+                  name:
+                    type: "string"
+                    example: "vehiculos/admin"
+                  description:
+                    type: "string"
+                    example: "Rol para administradores de vehículos"
+                  permissions:
+                    type: "array"
+                    items:
+                      type: "string"
+                    example: ["read", "write", "update", "delete"]
+                  screens:
+                    type: "array"
+                    items:
+                      type: "string"
+                    example: ["/solicitudCar", "/aprobaciones", "/registrovehiculos"]
+                  app:
+                    type: "string"
+                    example: "vehiculos"
+                  is_active:
+                    type: "boolean"
+                    example: true
+                  default_role:
+                    type: "boolean"
+                    example: false
+                  creation_date:
+                    type: "string"
+                    example: "2025-07-28T04:47:42.000Z"
+                  mod_date:
+                    type: "string"
+                    example: "2025-07-28T04:47:42.000Z"
+              message:
+                type: "string"
+                example: "Role created successfully"
+              message_code:
+                type: "string"
+                example: "ROLE_CREATED_SUCCESSFULLY"
+        "400":
+          description: "Bad Request - Validation Errors"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                enum:
+                  - "Role name cannot be empty"
+                  - "Role description cannot be empty"
+                  - "At least one permission is required"
+                  - "At least one screen is required"
+                  - "App cannot be empty"
+                example: "Role name cannot be empty"
+              message_code:
+                type: string
+                enum:
+                  - "EMPTY_ROLE_NAME"
+                  - "EMPTY_ROLE_DESCRIPTION"
+                  - "EMPTY_PERMISSIONS"
+                  - "EMPTY_SCREENS"
+                  - "EMPTY_APP"
+                example: "EMPTY_ROLE_NAME"
+        "409":
+          description: "Conflict - Role already exists"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Role already exists for this app"
+              message_code:
+                type: string
+                example: "ROLE_ALREADY_EXISTS"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "An unexpected error occurred."
+              message_code:
+                type: string
+                example: "UNEXPECTED_ERROR"
+  /security-user/register:
+    post:
+      tags:
+        - "Users"
+      summary: "Register security user"
+      description: "Register a new security user with multiple app access"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Security user registration object"
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+              - password
+              - email
+              - apps
+            properties:
+              name:
+                type: string
+                example: "Aaron Test"
+              password:
+                type: string
+                example: "password123"
+              email:
+                type: string
+                format: email
+                example: "aarontest1@utn.ac.cr"
+              apps:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - role
+                    - app
+                  properties:
+                    role:
+                      type: string
+                      example: "vehiculo/solicitante"
+                    app:
+                      type: string
+                      example: "vehiculos"
+      responses:
+        "201":
+          description: "Security user registered successfully"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Usuario registrado correctamente. Se ha enviado un código de verificación a tu email."
+              id:
+                type: string
+                example: "6886ffc2ed51b7cd81a38ff2"
+        "400":
+          description: "Bad Request - Missing required fields"
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Faltan campos requeridos"
+        "409":
+          description: "Conflict - User already exists"
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "Ya existe un usuario con ese correo"
+                 "500":
+           description: "Internal Server Error - Email sending failed"
+           schema:
+             type: object
+             properties:
+               error:
+                 type: string
+                 example: "Error al enviar el código de verificación por email"
+  /roleByUser/{email}/{app}:
+    get:
+      tags:
+        - "Users"
+      summary: "Get user roles by email and app"
+      description: "Get all roles (permissions, screens, etc.) for a user filtered by app"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - name: email
+          in: path
+          description: "User email"
+          required: true
+          type: string
+          format: email
+        - name: app
+          in: path
+          description: "Application name"
+          required: true
+          type: string
+      responses:
+        "200":
+          description: "User roles retrieved successfully"
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: "aarontest1@utn.ac.cr"
+                  name:
+                    type: string
+                    example: "Aaron Test"
+                  app:
+                    type: string
+                    example: "vehiculos"
+                  roles:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "vehiculo/solicitante"
+                        permissions:
+                          type: array
+                          items:
+                            type: string
+                          example: ["read", "write", "update"]
+                        screens:
+                          type: array
+                          items:
+                            type: string
+                          example: ["/solicitudCar", "/aprobaciones"]
+                        is_active:
+                          type: boolean
+                          example: true
+                        description:
+                          type: string
+                          example: "Rol para solicitantes de vehículos"
+                        app:
+                          type: string
+                          example: "vehiculos"
+              message:
+                type: string
+                example: "User roles retrieved successfully"
+              message_code:
+                type: string
+                example: "USER_ROLES_RETRIEVED"
+        "404":
+          description: "User not found"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "User not found"
+              message_code:
+                type: string
+                example: "USER_NOT_FOUND"
+        "500":
+          description: "Internal Server Error"
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "An unexpected error occurred."
+              message_code:
+                type: string
+                example: "UNEXPECTED_ERROR"
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"
