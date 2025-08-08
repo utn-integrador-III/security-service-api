@@ -34,5 +34,20 @@ def get_roles_by_user_and_app(email, app):
 @app.route('/role/<string:client_id>/create', methods=['POST'])
 def post_role(client_id):
     return RolController.post_role(client_id)
+
+
+
+#endpoint put of the screens rol
+@app.route('/role/<string:client_id>/screens', methods=['POST'])
+def post_screens(client_id):
+    return RolController.post_add_screens(client_id)
+
+#Endpoint delete rol
+@app.route("/role/<client_id>/delete", methods=["DELETE"])
+def delete_role(client_id):
+    return RolController.delete_role(client_id)
+
+
+
 if __name__ == "__main__":
     app.run(host=config('FLASK_RUN_HOST'), port=config('SECURITY_SERVICE_PORT'))
