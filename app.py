@@ -20,11 +20,11 @@ if config('SECURITY_API_ENVIRONMENT') == 'Development':
     cors = CORS(app, resources={r"/api/openapi": {"origins": "*"}, r"/*": {"origins": "*"}})
 
 addServiceLayer(api)
-
+#Endpoint register user
 @app.route('/security-user/register', methods=['POST'])
 def security_user_register():
     return register_security_user()
-
+#Get one
 @app.route('/roleByUser/<string:email>/<string:app>', methods=['GET'])
 def get_roles_by_user_and_app(email, app):
     return RolController.get_roles_by_user_and_app(email, app)
