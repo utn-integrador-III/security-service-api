@@ -123,8 +123,6 @@ class RolController(Resource):
             ).to_response()
     
 
-    #POST ROLL new endpoint
-   
     @staticmethod
     def post_role(client_id):
         try:
@@ -149,7 +147,7 @@ class RolController(Resource):
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
 
-            # Verificar que la app exista por client_id
+            #  que la app exista por client_id
             app = ApplicationModel().find_by_client_id(client_id)
             if not app:
                 return ServerResponse(
@@ -158,7 +156,16 @@ class RolController(Resource):
                     status=StatusCode.NOT_FOUND
                 ).to_response()
 
-            # Crear objeto del rol completo según estructura del modelo
+            #  si ya existe un rol con mismo name y app_client_id
+            existing_role = RoleModel.get_by_name_and_client_id(name.strip(), app["client_id"])
+            if existing_role:
+                return ServerResponse(
+                    message="Role already exists",
+                    message_code="DUPLICATE_ROLE",
+                    status=StatusCode.CONFLICT
+                ).to_response()
+
+            # json object
             role_data = {
                 "name": name.strip(),
                 "description": description.strip(),
@@ -168,7 +175,8 @@ class RolController(Resource):
                 "is_active": True,
                 "default_role": False,
                 "screens": [],                   # Vacío por defecto
-                "app": app["name"]              
+                "app": app["name"],
+                "app_client_id": app["client_id"]
             }
 
             new_role = RoleModel.create(role_data)
@@ -187,3 +195,98 @@ class RolController(Resource):
                 message_code="INTERNAL_SERVER_ERROR",
                 status=StatusCode.INTERNAL_SERVER_ERROR
             ).to_response()
+
+        
+
+    #post metod to insert screens that the user can acces
+    @staticmethod
+    def post_add_screens(client_id):
+        try:
+            data = request.get_json()
+            role_name = data.get("role_name")
+            new_screens = data.get("screens", [])
+
+            if not role_name:
+                return ServerResponse(
+                    message="Role name is required",
+                    message_code="INVALID_ROLE_NAME",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            if not isinstance(new_screens, list):
+                return ServerResponse(
+                    message="Screens must be a list",
+                    message_code="INVALID_SCREENS_FORMAT",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            updated_role = RoleModel.add_screens(role_name, client_id, new_screens)
+
+            if not updated_role:
+                return ServerResponse(
+                    message="Role not found or application not found",
+                    message_code="ROLE_OR_APP_NOT_FOUND",
+                    status=StatusCode.NOT_FOUND
+                ).to_response()
+            
+            if updated_role == "DUPLICATE":
+                return ServerResponse(
+                    message="Screens already exist",
+                    message_code="DUPLICATE_SCREENS",
+                    status=StatusCode.CONFLICT  # 409
+                ).to_response()
+
+            return ServerResponse(
+                data=updated_role.to_dict(),
+                message="Screens added successfully",
+                message_code="SCREENS_ADDED",
+                status=StatusCode.OK
+            ).to_response()
+
+        except Exception as e:
+            logging.error(f"Error adding screens: {str(e)}", exc_info=True)
+            return ServerResponse(
+                message="Internal server error",
+                message_code="INTERNAL_SERVER_ERROR",
+                status=StatusCode.INTERNAL_SERVER_ERROR
+            ).to_response()
+
+        
+
+    #Delete roll
+    @staticmethod
+    def delete_role(client_id):
+        try:
+            data = request.get_json()
+            role_name = data.get("role_name")
+
+            if not role_name:
+                return ServerResponse(
+                    message="Role name is required",
+                    message_code="INVALID_ROLE_NAME",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            deleted = RoleModel.delete_by_name_and_client_id(role_name, client_id)
+
+            if not deleted:
+                return ServerResponse(
+                    message="Role not found or already deleted",
+                    message_code="ROLE_NOT_FOUND",
+                    status=StatusCode.NOT_FOUND
+                ).to_response()
+
+            return ServerResponse(
+                message="Role deleted successfully",
+                message_code="ROLE_DELETED",
+                status=StatusCode.OK
+            ).to_response()
+
+        except Exception as e:
+            logging.error(f"Error deleting role: {str(e)}", exc_info=True)
+            return ServerResponse(
+                message="Internal server error",
+                message_code="INTERNAL_SERVER_ERROR",
+                status=StatusCode.INTERNAL_SERVER_ERROR
+            ).to_response()
+
