@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/
+      - MONGO_DB=student_service_dev
+      - JWT_SECRET_KEY=msT9F009fx8ov7LTBAg
+      - FLASK_DEBUG=True
+      - FLASK_RUN_HOST=0.0.0.0
+      - USER_COLLECTION=user
+      - ROLE_COLLECTION=role
+      - INFO_DB_COLLECTION=info_db
+      - SECURITY_API_ENVIRONMENT=Development
+      - SECURITY_SERVICE_PORT=8000
+      - ENCRYPTION_PASSWORD=kpA!3s7zZ@M1dL9qBh*Y4jX6e$PnTv2F.
+      - SENDER_EMAIL=studentserviceUTN@outlook.com
+      - SENDER_EMAIL_PASSWORD=mixcar-huxxuv-0jiXpu
+      - AUTH_API_URL=http://localhost/
+      - AUTH_API_PORT=5002
+      - SMTP_SERVER=smtp.office365.com
+      - SMTP_PORT=587
+
+    volumes:
+      - ..:/usr/src/app
+    restart: unless-stopped
+
+# =============================
+# NOTA: Comandos útiles Docker Compose
+# Para levantar el servicio (build + run):
+#   docker-compose up --build
+# Para apagar el servicio:
+#   docker-compose down
+# =============================
+
