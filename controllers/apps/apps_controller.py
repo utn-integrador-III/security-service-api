@@ -14,7 +14,7 @@ class AppsListController(Resource):
             name = data.get('name')
             redirect_url = data.get('redirect_url')
             status = data.get('status', 'active')
-            admin_id = data.get('admin_id')
+            admin_id = data.get('admin_id')  # string -> se convertirá a ObjectId en el modelo
 
             if not all([name, redirect_url]):
                 return ServerResponse(
@@ -24,11 +24,7 @@ class AppsListController(Resource):
 
             try:
                 created = AppModel.create(name, redirect_url, status, admin_id)
-                return ServerResponse(
-                    data=created,
-                    message="app created",
-                    status=StatusCode.CREATED
-                ).to_response()
+                return ServerResponse(data=created, message="app created", status=StatusCode.CREATED).to_response()
             except ValueError as ve:
                 return ServerResponse(message=str(ve), status=StatusCode.UNPROCESSABLE_ENTITY).to_response()
             except Exception as e:
@@ -36,7 +32,7 @@ class AppsListController(Resource):
                 return ServerResponse(message="Error creating app", status=StatusCode.INTERNAL_SERVER_ERROR).to_response()
 
         except Exception as e:
-            logging.error(f"An unexpected error occurred in POST /apps: {str(e)}", exc_info=True)
+            logging.error(f"Unexpected error in POST /apps: {str(e)}", exc_info=True)
             return ServerResponse(message="An unexpected error occurred.", status=StatusCode.INTERNAL_SERVER_ERROR).to_response()
 
     def get(self):
