@@ -11,6 +11,8 @@ from controllers.user.UserActivationController import UserActivationController
 from controllers.user.UserAppController import UserAppController
 from controllers.user.UserEnrollment_controller import UserEnrollmentController
 from controllers.application.app_controller import AppController
+from controllers.admin.admin_controller import AdminListController, AdminItemController
+
 def addServiceLayer(api: Api):
     # Health
     api.add_resource(HealthController, HealthController.route)
@@ -33,3 +35,7 @@ def addServiceLayer(api: Api):
     api.add_resource(UserAppController, UserAppController.route)
     # Apps CRUD endpoints
     api.add_resource(AppController, AppController.route, f"{AppController.route}/<string:app_id>")
+
+    # User_Admin
+    api.add_resource(AdminListController, AdminListController.route)
+    api.add_resource(AdminItemController, AdminItemController.route)
