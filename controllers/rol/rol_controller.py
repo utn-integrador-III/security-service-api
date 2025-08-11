@@ -123,16 +123,22 @@ class RolController(Resource):
             ).to_response()
     
 
+
+
     @staticmethod
-    def post_role(client_id):
+    def post_role(admin_id):
         try:
             data = request.get_json()
+            print(f"Received data for new role: {data}")
+            print(f"Admin ID passed: {admin_id}")
+
             name = data.get('name')
             description = data.get('description', '')
             permissions = data.get('permissions', [])
 
             # Validación del nombre
             if not name or len(name.strip()) < 2:
+                print("Warning: Invalid role name received")
                 return ServerResponse(
                     message="Invalid role name",
                     message_code="INVALID_NAME",
@@ -141,31 +147,38 @@ class RolController(Resource):
 
             # Validación de permisos
             if not isinstance(permissions, list):
+                print("Warning: Permissions not a list")
                 return ServerResponse(
                     message="Permissions must be a list",
                     message_code="INVALID_PERMISSIONS",
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
 
-            #  que la app exista por client_id
-            app = ApplicationModel().find_by_client_id(client_id)
+            # Verificar que la app exista por admin_id usando ApplicationModel
+            print(f"Looking for application with admin_id: {admin_id}")
+            app = ApplicationModel.find_by_client_id(admin_id)  # Cambiar a ApplicationModel
+            print(f"Application found: {app}")
+
             if not app:
+                print(f"Error: No application found for admin_id: {admin_id}")
                 return ServerResponse(
                     message="Application not found",
                     message_code="APP_NOT_FOUND",
                     status=StatusCode.NOT_FOUND
                 ).to_response()
 
-            #  si ya existe un rol con mismo name y app_client_id
-            existing_role = RoleModel.get_by_name_and_client_id(name.strip(), app["client_id"])
+            # Verificar que no exista rol duplicado en esa app
+            existing_role = RoleModel.get_by_name_and_app_id(name.strip(), app["_id"])
+            print(f"Existing role check result: {existing_role}")
             if existing_role:
+                print(f"Warning: Role '{name.strip()}' already exists for app_id {app['_id']}")
                 return ServerResponse(
                     message="Role already exists",
                     message_code="DUPLICATE_ROLE",
                     status=StatusCode.CONFLICT
                 ).to_response()
 
-            # json object
+            # Crear objeto del rol
             role_data = {
                 "name": name.strip(),
                 "description": description.strip(),
@@ -173,38 +186,38 @@ class RolController(Resource):
                 "creation_date": datetime.utcnow(),
                 "mod_date": datetime.utcnow(),
                 "is_active": True,
-                "default_role": False,
-                "screens": [],                   # Vacío por defecto
-                "app": app["name"],
-                "app_client_id": app["client_id"]
+                "screens": [],  # vacío por defecto
+                "admin_id": admin_id
+              
             }
+            print(f"Creating role with data: {role_data}")
 
             new_role = RoleModel.create(role_data)
+            print(f"Role created with ID: {new_role._id}")
 
             return ServerResponse(
-                data=new_role,
+                data=new_role.to_dict() if hasattr(new_role, "to_dict") else new_role.__dict__,
                 message="Role created successfully",
                 message_code="CREATED",
                 status=StatusCode.CREATED
             ).to_response()
 
         except Exception as e:
-            logging.error(f"Error creating role: {str(e)}", exc_info=True)
+            print(f"Error creating role: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return ServerResponse(
                 message="Internal server error",
                 message_code="INTERNAL_SERVER_ERROR",
                 status=StatusCode.INTERNAL_SERVER_ERROR
             ).to_response()
 
-        
 
-    #post metod to insert screens that the user can acces
     @staticmethod
-    def post_add_screens(client_id):
+    def delete_role(app_id):
         try:
             data = request.get_json()
             role_name = data.get("role_name")
-            new_screens = data.get("screens", [])
 
             if not role_name:
                 return ServerResponse(
@@ -213,80 +226,110 @@ class RolController(Resource):
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
 
-            if not isinstance(new_screens, list):
-                return ServerResponse(
-                    message="Screens must be a list",
-                    message_code="INVALID_SCREENS_FORMAT",
-                    status=StatusCode.UNPROCESSABLE_ENTITY
-                ).to_response()
-
-            updated_role = RoleModel.add_screens(role_name, client_id, new_screens)
+            # En vez de eliminar, actualiza is_active a False
+            updated_role = RoleModel.update_by_name_and_client_id(
+                role_name, app_id, {"is_active": False}
+            )
 
             if not updated_role:
                 return ServerResponse(
-                    message="Role not found or application not found",
-                    message_code="ROLE_OR_APP_NOT_FOUND",
+                    message="Role not found or already inactive",
+                    message_code="ROLE_NOT_FOUND_OR_INACTIVE",
                     status=StatusCode.NOT_FOUND
-                ).to_response()
-            
-            if updated_role == "DUPLICATE":
-                return ServerResponse(
-                    message="Screens already exist",
-                    message_code="DUPLICATE_SCREENS",
-                    status=StatusCode.CONFLICT  # 409
                 ).to_response()
 
             return ServerResponse(
-                data=updated_role.to_dict(),
-                message="Screens added successfully",
-                message_code="SCREENS_ADDED",
+                message="Role deactivated successfully",
+                message_code="ROLE_DEACTIVATED",
                 status=StatusCode.OK
             ).to_response()
 
         except Exception as e:
-            logging.error(f"Error adding screens: {str(e)}", exc_info=True)
+            logging.error(f"Error deactivating role: {str(e)}", exc_info=True)
             return ServerResponse(
                 message="Internal server error",
                 message_code="INTERNAL_SERVER_ERROR",
                 status=StatusCode.INTERNAL_SERVER_ERROR
             ).to_response()
 
-        
-
-    #Delete roll
     @staticmethod
-    def delete_role(client_id):
+    def update_role(app_id, role_id):
         try:
             data = request.get_json()
-            role_name = data.get("role_name")
+            name = data.get('name')
+            description = data.get('description')
+            permissions = data.get('permissions')
 
-            if not role_name:
+            if not any([name, description, permissions]):
                 return ServerResponse(
-                    message="Role name is required",
-                    message_code="INVALID_ROLE_NAME",
+                    message="No data to update",
+                    message_code="NO_UPDATE_DATA",
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
 
-            deleted = RoleModel.delete_by_name_and_client_id(role_name, client_id)
-
-            if not deleted:
+            app = ApplicationModel().find_by_client_id(app_id)
+            if not app:
                 return ServerResponse(
-                    message="Role not found or already deleted",
+                    message="Application not found",
+                    message_code="APP_NOT_FOUND",
+                    status=StatusCode.NOT_FOUND
+                ).to_response()
+
+            existing_role = RoleModel.get_by_id_and_app_id(role_id, app_id)
+            if not existing_role:
+                return ServerResponse(
+                    message="Role not found",
                     message_code="ROLE_NOT_FOUND",
                     status=StatusCode.NOT_FOUND
                 ).to_response()
 
+            if name and name.strip().lower() != existing_role.name.lower():
+                duplicate = RoleModel.get_by_name_and_app_id(name.strip(), app_id)
+                if duplicate:
+                    return ServerResponse(
+                        message="Role name already exists",
+                        message_code="DUPLICATE_ROLE",
+                        status=StatusCode.CONFLICT
+                    ).to_response()
+
+            update_data = {}
+            if name:
+                update_data["name"] = name.strip()
+            if description is not None:
+                update_data["description"] = description.strip()
+            if permissions is not None:
+                if not isinstance(permissions, list):
+                    return ServerResponse(
+                        message="Permissions must be a list",
+                        message_code="INVALID_PERMISSIONS",
+                        status=StatusCode.UNPROCESSABLE_ENTITY
+                    ).to_response()
+                update_data["permissions"] = permissions
+
+            update_data["mod_date"] = datetime.utcnow()
+
+            updated_role = RoleModel.update_by_id(role_id, app_id, update_data)
+
+            if not updated_role:
+                return ServerResponse(
+                    message="Failed to update role",
+                    message_code="UPDATE_FAILED",
+                    status=StatusCode.INTERNAL_SERVER_ERROR
+                ).to_response()
+
             return ServerResponse(
-                message="Role deleted successfully",
-                message_code="ROLE_DELETED",
+                data=updated_role.to_dict(),
+                message="Role updated successfully",
+                message_code="UPDATED",
                 status=StatusCode.OK
             ).to_response()
 
         except Exception as e:
-            logging.error(f"Error deleting role: {str(e)}", exc_info=True)
+            logging.error(f"Error updating role: {str(e)}", exc_info=True)
             return ServerResponse(
                 message="Internal server error",
                 message_code="INTERNAL_SERVER_ERROR",
                 status=StatusCode.INTERNAL_SERVER_ERROR
             ).to_response()
-
+    
+    

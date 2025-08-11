@@ -1,162 +1,186 @@
 from models.role.db_queries import db_find_active_and_default_roles
 import logging
 from models.role.db_queries import __dbmanager__
-from models.application.getapp import ApplicationModel
+from bson.objectid import ObjectId
+from datetime import datetime
 
 class RoleModel:
-    def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, app, app_client_id=None, _id=None):
+    def __init__(self, name, description, permissions, creation_date, mod_date, is_active, screens, admin_id, _id=None):
         self.name = name
         self.description = description
         self.permissions = permissions
         self.creation_date = creation_date
         self.mod_date = mod_date
         self.is_active = is_active
-        self.default_role = default_role
         self.screens = screens
-        self.app = app
-        self.app_client_id = app_client_id
+        self.admin_id = admin_id
         self._id = _id
-        
+
     def to_dict(self):
         return {
-            "_id": self._id,
+            "_id": str(self._id) if self._id else None,
             "name": self.name,
             "description": self.description,
             "permissions": self.permissions,
             "creation_date": self.creation_date,
             "mod_date": self.mod_date,
             "is_active": self.is_active,
-            "default_role": self.default_role,
             "screens": self.screens,
-            "app": self.app,
-            "app_client_id": self.app_client_id
+            "admin_id": self.admin_id
         }
-
-    @classmethod
-    def find_active_and_default_roles(cls):
-        # Fetch active roles and the default role from the database
-        try:
-            roles, default_role = db_find_active_and_default_roles()
-            return roles, default_role
-        except Exception as e:
-            raise Exception('Error finding active and default roles')
-
-    @classmethod
-    def get_by_name(cls, name):
-        try:
-            result = __dbmanager__.find_one({"name": name})
-            if result:
-                return cls(
-                    _id=result.get("_id"),
-                    name=result.get("name"),
-                    description=result.get("description"),
-                    permissions=result.get("permissions"),
-                    creation_date=result.get("creation_date"),
-                    mod_date=result.get("mod_date"),
-                    is_active=result.get("is_active"),
-                    default_role=result.get("default_role"),
-                    screens=result.get("screens"),
-                    app=result.get("app"),
-                    app_client_id=result.get("app_client_id")
-                )
-            return None
-        except Exception as ex:
-            logging.exception(ex)
-            raise Exception("Failed to get rol by name: " + str(ex))
-    
 
     @classmethod
     def create(cls, role_data):
         try:
             result = __dbmanager__.create_data(role_data)
             if result.inserted_id:
-                role_data["_id"] = result.inserted_id
-                return cls(**role_data)
+                instance = cls(
+                    name=role_data["name"],
+                    description=role_data["description"],
+                    permissions=role_data["permissions"],
+                    creation_date=role_data["creation_date"],
+                    mod_date=role_data["mod_date"],
+                    is_active=role_data["is_active"],
+                    screens=role_data["screens"],
+                    admin_id=role_data["admin_id"]
+                )
+                instance._id = str(result.inserted_id)
+                return instance
             return None
         except Exception as ex:
             logging.exception(ex)
             raise Exception("Error creating role: " + str(ex))
-        
-    #Meotod para agregar screens
-    @classmethod
-    def add_screens(cls, role_name, client_id, new_screens):
-        try:
-            if not isinstance(new_screens, list):
-                raise ValueError("Screens must be a list of strings")
-
-            # Buscar rol 
-            existing_role = __dbmanager__.find_one({"name": role_name, "app_client_id": client_id})
-            if not existing_role:
-                return None  # No existe el rol
-            
-
-            result = __dbmanager__.collection.update_one(
-                {"name": role_name, "app_client_id": client_id},
-                {#Para poder seguir agregando sin que se borren existentes
-                    "$addToSet": {
-                        "screens": {"$each": new_screens}
-                    }
-                    
-                }
-            )
-
-            if result.modified_count == 0:
-             # No se agregó nada, las screens ya estaban
-                return "DUPLICATE"
-
-            updated_role = __dbmanager__.find_one({"name": role_name, "app_client_id": client_id})
-            return cls(
-                _id=updated_role.get("_id"),
-                name=updated_role.get("name"),
-                description=updated_role.get("description"),
-                permissions=updated_role.get("permissions"),
-                creation_date=updated_role.get("creation_date"),
-                mod_date=updated_role.get("mod_date"),
-                is_active=updated_role.get("is_active"),
-                default_role=updated_role.get("default_role"),
-                screens=updated_role.get("screens"),
-                app=updated_role.get("app"),
-                app_client_id=updated_role.get("app_client_id")
-            )
-        except Exception as ex:
-            logging.exception(ex)
-            raise Exception("Failed to add screens: " + str(ex))
-
-    
 
     @classmethod
-    def delete_by_name_and_client_id(cls, role_name, client_id):
+    def get_by_name_and_app_id(cls, name, admin_id):
         try:
-            result = __dbmanager__.collection.delete_one({
-                "name": role_name,
-                "app_client_id": client_id
+            result = __dbmanager__.find_one({
+                "name": name,
+                "admin_id": admin_id
             })
-            return result.deleted_count > 0
-        except Exception as e:
-            logging.exception(e)
-            raise Exception(f"Error deleting role: {str(e)}")
-    
-    #para obtener el rol por nombre y idapp
-    @classmethod
-    def get_by_name_and_client_id(cls, name, client_id):
-        try:
-            result = __dbmanager__.find_one({"name": name, "app_client_id": client_id})
             if result:
-                return cls(
-                    _id=result.get("_id"),
-                    name=result.get("name"),
-                    description=result.get("description"),
-                    permissions=result.get("permissions"),
-                    creation_date=result.get("creation_date"),
-                    mod_date=result.get("mod_date"),
-                    is_active=result.get("is_active"),
-                    default_role=result.get("default_role"),
-                    screens=result.get("screens"),
-                    app=result.get("app"),
-                    app_client_id=result.get("app_client_id")
+                instance = cls(
+                    name=result["name"],
+                    description=result["description"],
+                    permissions=result["permissions"],
+                    creation_date=result["creation_date"],
+                    mod_date=result["mod_date"],
+                    is_active=result["is_active"],
+                    screens=result["screens"],
+                    admin_id=result["admin_id"]
                 )
+                instance._id = str(result["_id"])
+                return instance
             return None
         except Exception as ex:
             logging.exception(ex)
-            raise Exception("Failed to get role by name and client_id: " + str(ex))
+            raise Exception("Failed to get role by name and admin_id: " + str(ex))
 
+    @classmethod
+    def get_by_id_and_app_id(cls, role_id, admin_id):
+        try:
+            result = __dbmanager__.find_one({
+                "_id": ObjectId(role_id),
+                "admin_id": admin_id
+            })
+            if result:
+                instance = cls(
+                    name=result["name"],
+                    description=result["description"],
+                    permissions=result["permissions"],
+                    creation_date=result["creation_date"],
+                    mod_date=result["mod_date"],
+                    is_active=result["is_active"],
+                    screens=result["screens"],
+                    admin_id=result["admin_id"]
+                )
+                instance._id = str(result["_id"])
+                return instance
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to get role by ID and admin_id: " + str(ex))
+
+    @classmethod
+    def update_by_id(cls, role_id, admin_id, update_data):
+        try:
+            if "mod_date" not in update_data:
+                update_data["mod_date"] = datetime.utcnow()
+
+            result = __dbmanager__.update_by_condition(
+                {"_id": ObjectId(role_id), "admin_id": admin_id},
+                update_data  
+            )
+
+            if result:
+                updated = __dbmanager__.find_one({"_id": ObjectId(role_id)})
+                if updated:
+                    instance = cls(
+                        name=updated["name"],
+                        description=updated["description"],
+                        permissions=updated["permissions"],
+                        creation_date=updated["creation_date"],
+                        mod_date=updated["mod_date"],
+                        is_active=updated["is_active"],
+                        screens=updated["screens"],
+                        admin_id=updated["admin_id"]
+                    )
+                    instance._id = str(updated["_id"])
+                    return instance
+                return None
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to update role: " + str(ex))
+
+    @classmethod
+    def update_by_name_and_client_id(cls, role_name, admin_id, update_data):
+        try:
+            result = __dbmanager__.update_by_condition(
+                {"name": role_name, "admin_id": admin_id},
+                update_data
+            )
+            if result.modified_count > 0:
+                updated = __dbmanager__.find_one({"name": role_name, "admin_id": admin_id})
+                if updated:
+                    instance = cls(
+                        name=updated["name"],
+                        description=updated["description"],
+                        permissions=updated["permissions"],
+                        creation_date=updated["creation_date"],
+                        mod_date=updated["mod_date"],
+                        is_active=updated["is_active"],
+                        screens=updated["screens"],
+                        admin_id=updated["admin_id"]
+                    )
+                    instance._id = str(updated["_id"])
+                    return instance
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to update role: " + str(ex))
+
+
+    @classmethod
+    def find_by_admin_id(cls, admin_id):
+        try:
+            print(f"Searching for roles with admin_id: {admin_id}")
+            result = __dbmanager__.find_one({"admin_id": admin_id})
+            print(f"Result found: {result}")
+            if result:
+                instance = cls(
+                    name=result["name"],
+                    description=result["description"],
+                    permissions=result["permissions"],
+                    creation_date=result["creation_date"],
+                    mod_date=result["mod_date"],
+                    is_active=result["is_active"],
+                    screens=result["screens"],
+                    admin_id=result["admin_id"]
+                )
+                instance._id = str(result["_id"])
+                return instance
+            return None
+        except Exception as e:
+            logging.exception(e)
+            return None

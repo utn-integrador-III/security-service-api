@@ -6,9 +6,10 @@ from decouple import config
 from service import addServiceLayer
 import logging
 
-# ✅ Corrección en la importación
+
 from controllers.user.security_user_enrollment import register_security_user
 from controllers.rol.rol_controller import RolController
+from controllers.rol.screnss_controller import ScreensController
 
 app = Flask(__name__)
 app.debug = config('FLASK_DEBUG', cast=bool)
@@ -24,6 +25,11 @@ addServiceLayer(api)
 @app.route('/security-user/register', methods=['POST'])
 def security_user_register():
     return register_security_user()
+
+
+
+##             ENDPOINT ROLE             ##
+
 #Get one
 @app.route('/roleByUser/<string:email>/<string:app>', methods=['GET'])
 def get_roles_by_user_and_app(email, app):
@@ -37,15 +43,35 @@ def post_role(client_id):
 
 
 
-#endpoint put of the screens rol
-@app.route('/role/<string:client_id>/screens', methods=['POST'])
-def post_screens(client_id):
-    return RolController.post_add_screens(client_id)
-
 #Endpoint delete rol
 @app.route("/role/<client_id>/delete", methods=["DELETE"])
 def delete_role(client_id):
     return RolController.delete_role(client_id)
+
+
+
+# Endpoint update rol
+@app.route("/role/<client_id>/update/<role_id>", methods=["PUT"])
+def update_role(client_id, role_id):
+    return RolController.update_role(client_id, role_id)
+
+
+
+
+
+##             ENDPOINTS SCREENS            ##
+
+#endpoint post of the screens rol
+@app.route('/role/<string:client_id>/screens', methods=['POST'])
+def post_screens(client_id):
+    return ScreensController.post_add_screens(client_id)
+
+
+@app.route('/role/<string:client_id>/screens/delete', methods=['DELETE'])
+def delete_screens(client_id):
+    return ScreensController.delete_screens(client_id)
+
+
 
 
 
