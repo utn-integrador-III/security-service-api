@@ -3,7 +3,7 @@ from db.mongo_client import Connection
 from decouple import config
 from bson.objectid import ObjectId
 
-# usa ADMIN_COLLECTION o por defecto 'user_admin'
+
 __dbmanager__ = Connection(config('ADMIN_COLLECTION', default='user_admin'))
 
 def get_by_email(email: str):

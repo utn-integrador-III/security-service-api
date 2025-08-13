@@ -14,7 +14,7 @@ class AppsListController(Resource):
             name = data.get('name')
             redirect_url = data.get('redirect_url')
             status = data.get('status', 'active')
-            admin_id = data.get('admin_id')  # string -> se convertirá a ObjectId en el modelo
+            admin_id = data.get('admin_id') 
 
             if not all([name, redirect_url]):
                 return ServerResponse(
