@@ -1,8 +1,11 @@
 from models.role.db_queries import db_find_active_and_default_roles
 import logging
 from models.role.db_queries import __dbmanager__
+#from models.application.getapp import ApplicationModel
 from bson.objectid import ObjectId
 from datetime import datetime
+
+
 
 class RoleModel:
     def __init__(self, name, description, permissions, creation_date, mod_date, is_active, screens, admin_id, _id=None):

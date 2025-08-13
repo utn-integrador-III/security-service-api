@@ -3,7 +3,7 @@ from swagger_ui import flask_api_doc
 from flask_restful import Api
 from flask_cors import CORS
 from decouple import config
-from service import addServiceLayer
+
 import logging
 
 

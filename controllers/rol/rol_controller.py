@@ -6,8 +6,8 @@ from models.user.user import UserModel
 from .parser import RolParser
 import logging
 from datetime import datetime
-
-from models.application.getapp import ApplicationModel
+from models.apps.app import AppModel
+#from models.application.getapp import ApplicationModel
 from models.role.role import RoleModel
 
 class RolController(Resource):
