@@ -3,13 +3,14 @@ from swagger_ui import flask_api_doc
 from flask_restful import Api
 from flask_cors import CORS
 from decouple import config
-
+from service import addServiceLayer
 import logging
 
 
 from controllers.user.security_user_enrollment import register_security_user
 from controllers.rol.rol_controller import RolController
 from controllers.rol.screnss_controller import ScreensController
+
 
 app = Flask(__name__)
 app.debug = config('FLASK_DEBUG', cast=bool)
@@ -19,8 +20,8 @@ logging.basicConfig(level=logging.INFO)
 
 if config('SECURITY_API_ENVIRONMENT') == 'Development':
     cors = CORS(app, resources={r"/api/openapi": {"origins": "*"}, r"/*": {"origins": "*"}})
-
 addServiceLayer(api)
+
 #Endpoint register user
 @app.route('/security-user/register', methods=['POST'])
 def security_user_register():
@@ -37,26 +38,23 @@ def get_roles_by_user_and_app(email, app):
 
 
 #endpoint post of the role
-@app.route('/role/<string:client_id>/create', methods=['POST'])
-def post_role(client_id):
-    return RolController.post_role(client_id)
+@app.route('/role/<string:app_id>/create', methods=['POST'])
+def post_role(app_id):
+    return RolController.post(app_id)
 
 
 
 #Endpoint delete rol
-@app.route("/role/<client_id>/delete", methods=["DELETE"])
-def delete_role(client_id):
-    return RolController.delete_role(client_id)
+@app.route("/role/<app_id>/delete", methods=["DELETE"])
+def delete_role(app_id):
+    return RolController.delete(app_id)
 
 
 
-# Endpoint update rol
-@app.route("/role/<client_id>/update/<role_id>", methods=["PUT"])
-def update_role(client_id, role_id):
-    return RolController.update_role(client_id, role_id)
-
-
-
+# Endpoint update rol 
+@app.route("/role/<app_id>/update", methods=["PUT"])
+def update_role(app_id):
+    return RolController.patch(app_id)
 
 
 ##             ENDPOINTS SCREENS            ##
@@ -70,6 +68,11 @@ def post_screens(client_id):
 @app.route('/role/<string:client_id>/screens/delete', methods=['DELETE'])
 def delete_screens(client_id):
     return ScreensController.delete_screens(client_id)
+
+
+@app.route('/role/<string:client_id>/screens', methods=['GET'])
+def get_screens(client_id):
+    return ScreensController.get_screens(client_id)
 
 
 
