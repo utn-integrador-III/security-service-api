@@ -74,7 +74,7 @@ class UserEnrollmentController(Resource):
             if policy_msg:
                 return ServerResponse(message=policy_msg, status=StatusCode.BAD_REQUEST).to_response()
 
-            # -------- Construcción de apps_to_assign (ObjectId + verificación) --------
+            # -------- Construcción de apps_to_assign --------
             apps_to_assign = []
 
             # 1) role_name + app_name
@@ -111,7 +111,7 @@ class UserEnrollmentController(Resource):
                     "is_session_active": False
                 })
 
-            # 2) arreglo apps[] (id o nombre)
+            # 2) arreglo apps[] 
             for ap in apps_body or []:
                 role_val = ap.get("role")
                 app_val  = ap.get("app")
@@ -159,7 +159,7 @@ class UserEnrollmentController(Resource):
                     status=StatusCode.BAD_REQUEST
                 ).to_response()
 
-            # -------- Lógica principal (sin status en raíz) --------
+            # -------- Lógica principal  --------
             existing_user = UserModel.find_by_email(email)
             if existing_user:
                 user_apps = existing_user.get("apps", []) or []
@@ -178,7 +178,7 @@ class UserEnrollmentController(Resource):
                         ).to_response()
 
                 user_apps.extend(apps_to_assign)
-                # <<< SIN status en root >>>
+                
                 UserModel.update_user(email, {"apps": user_apps})
 
                 for ap in apps_to_assign:
@@ -193,7 +193,7 @@ class UserEnrollmentController(Resource):
                     status=StatusCode.OK
                 ).to_response()
 
-            # crear usuario (SIN status en root)
+            # crear usuario 
             user_data = {
                 "name": name.strip(),
                 "password": password,
@@ -422,7 +422,7 @@ class UserPasswordController(Resource):
             if not user:
                 return ServerResponse(message="User not found", message_code=USER_NOT_FOUND, status=StatusCode.NOT_FOUND).to_response()
 
-            # SIN status en root: validar que tenga al menos una app activa
+            # validar que tenga al menos una app activa
             if not any((a.get('status') == 'Active') for a in (user.get('apps') or [])):
                 return ServerResponse(message="User is not active", message_code=USER_NOT_ACTIVE, status=StatusCode.FORBIDDEN).to_response()
 

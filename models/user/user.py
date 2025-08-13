@@ -4,7 +4,7 @@ from utils.encryption_utils import EncryptionUtil
 from models.user.db_queries import __dbmanager__, update_token as _unused_update_token, update_password as _unused_update_password
 
 class UserModel:
-    # status / is_session_active se eliminan del root
+
     def __init__(self, name, password, email, apps):
         self.name = name
         self.password = password
@@ -176,7 +176,7 @@ class UserModel:
         
     @staticmethod
     def update_user(email, update_data):
-        # Protección: no permitir status / is_session_active en root
+
         update_data.pop('status', None)
         update_data.pop('is_session_active', None)
 
