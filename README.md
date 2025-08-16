@@ -21,19 +21,6 @@
 
 5. Run the project under 'Run and debug'
 
-## Sending emails with Azure Communication Services (ACS)
-
-1. Replace these variables in the .env file.
-
-```.env
-# --- Azure Communication Services ---
-EMAIL_PROVIDER=acs
-ACS_CONNECTION_STRING=endpoint=https://security-acs-dev.unitedstates.communication.azure.com/;accesskey=F9GMca2OUAYjw6vHJK5PS5MjJv8iTzHzCdTapttFPJ6rKub3fCbcJQQJ99BHACULyCplF0bbAAAAAZCSDMEO
-ACS_SENDER_ADDRESS=DoNotReply@6315dc5b-c4e5-4897-9694-d69302c913ac.azurecomm.net
-# (opcional) Si se desea utilizar un correo alternativo para las respuestas
-# REPLY_TO_EMAIL=DoNotReply@6315dc5b-c4e5-4897-9694-d69302c913ac.azurecomm.net
-```
-
 
 ## Running the project in a docker container
 
