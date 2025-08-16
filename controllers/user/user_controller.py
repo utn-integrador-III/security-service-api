@@ -104,7 +104,7 @@ class UserEnrollmentController(Resource):
                 apps_to_assign.append({
                     "role": role_oid,
                     "app":  app_oid,
-                    "code": str(random.randint(100000, 999999)),
+                    "code": generate_verification_code(),
                     "token": "",
                     "status": "Pending",
                     "code_expliration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),

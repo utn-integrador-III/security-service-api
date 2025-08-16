@@ -1,59 +1,81 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+# utils/email_manager.py
 from decouple import config
+from azure.communication.email import EmailClient
 
+def _email_client():
+    conn_str = config("ACS_CONNECTION_STRING")
+    return EmailClient.from_connection_string(conn_str)
 
-def send_email(recipient_email, code):
-    # create a multipart message object
-    msg = MIMEMultipart('alternative')
-    msg['FROM'] = config('SENDER_EMAIL')
-    msg['TO'] = recipient_email
-    msg['Subject'] = 'Verification Code'
-    message = ' Hi ' + recipient_email + ' Your verification Code to activate your account is: ' + str(code) + ' Follow this link http//:localhost:4200/activateAcc to proceed on activating your account' 
-    # record the MIME type of both parts to be included in message
-    part1 = MIMEText(message, 'plain')
-    msg.attach(part1)
+def _send_with_acs(subject: str, plain_text: str, html: str, to_address: str):
+    client = _email_client()
+    sender = config("ACS_SENDER_ADDRESS")
+    msg = {
+        "senderAddress": sender,
+        "recipients": {"to": [{"address": to_address}]},
+        "content": {"subject": subject, "plainText": plain_text, "html": html},
+    }
+    reply_to = config("REPLY_TO_EMAIL", default=None)
+    if reply_to:
+        msg["replyTo"] = [{"address": reply_to}]
 
+    poller = client.begin_send(msg)
+    result = poller.result()  # LRO: espera hasta que ACS acepte el envío
+    # Opcional: puedes loguear result.message_id si lo necesitas
+    return result
+
+def send_email(recipient_email: str, code: str):
+    """
+    Envía el correo de verificación de cuenta.
+    """
+    # corrige el link (estaba "http//:..."): usa http://localhost:5002/activateAcc
+    activate_link = f"http://localhost:5002/activateAcc?email={recipient_email}&code={code}"
+
+    subject = "Verification Code"
+    plain = (
+        f"Hi {recipient_email}\n\n"
+        f"Your verification code to activate your account is: {code}\n"
+        f"Follow this link to continue: {activate_link}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+    html = f"""
+    <p>Hi <strong>{recipient_email}</strong>,</p>
+    <p>Your verification code to activate your account is: <strong>{code}</strong></p>
+    <p>
+        Click here to continue: <a href="{activate_link}">{activate_link}</a>
+    </p>
+    <p style="color:#666;font-size:12px">If you did not request this, you can ignore this email.</p>
+    """
 
     try:
-        # create a secure SSL connection with server
-        server = smtplib.SMTP(config('SMTP_SERVER'),config('SMTP_PORT'))
-        server.starttls()
-        # Login to your outlook email
-        server.login(config('SENDER_EMAIL'), config('SENDER_EMAIL_PASSWORD'))
-        # send email
-        server.sendmail(config('SENDER_EMAIL'), recipient_email, msg.as_string())
-        print('Email Have been sent!')
-    except smtplib.SMTPException as e:
-        print('Error: unable to send email', str(e))
-    finally:
-        #close connection
-        server.quit()
+        _send_with_acs(subject, plain, html, recipient_email)
+        print("Verification email sent via ACS.")
+    except Exception as e:
+        # loguea bien el error en tu app
+        print("Error sending verification email via ACS:", str(e))
+        raise
 
-def send_email_new_password(recipient_email, new_password):
-    # Crea un mensaje multipart
-    msg = MIMEMultipart('alternative')
-    msg['From'] = config('SENDER_EMAIL')
-    msg['To'] = recipient_email
-    msg['Subject'] = 'Your New Password'
-    
-    # Define el cuerpo del mensaje con la nueva contraseña
-    message = f"Hi,\n\nYour password has been successfully reset. Your new password is: {new_password}\n\nPlease use this password to log in and change your password immediately.\n\nBest regards,\nYour Support Team"
-    part1 = MIMEText(message, 'plain')
-    msg.attach(part1)
+def send_email_new_password(recipient_email: str, new_password: str):
+    """
+    Envía el correo con la nueva contraseña generada.
+    """
+    subject = "Your New Password"
+    plain = (
+        "Hi,\n\n"
+        f"Your password has been successfully reset. Your new password is: {new_password}\n\n"
+        "Please log in and change your password immediately.\n\n"
+        "Best regards,\nSupport Team"
+    )
+    html = f"""
+    <p>Hi,</p>
+    <p>Your password has been successfully reset. Your new password is:
+       <strong>{new_password}</strong></p>
+    <p>Please log in and change your password immediately.</p>
+    <p>Best regards,<br/>Support Team</p>
+    """
 
     try:
-        # Conéctate al servidor SMTP
-        server = smtplib.SMTP(config('SMTP_SERVER'), config('SMTP_PORT'))
-        server.starttls()
-        # Inicia sesión en tu correo electrónico
-        server.login(config('SENDER_EMAIL'), config('SENDER_EMAIL_PASSWORD'))
-        # Envía el correo electrónico
-        server.sendmail(config('SENDER_EMAIL'), recipient_email, msg.as_string())
-        print('Email has been sent!')
-    except smtplib.SMTPException as e:
-        print('Error: unable to send email', str(e))
-    finally:
-        # Cierra la conexión
-        server.quit()
+        _send_with_acs(subject, plain, html, recipient_email)
+        print("Password reset email sent via ACS.")
+    except Exception as e:
+        print("Error sending password reset email via ACS:", str(e))
+        raise
