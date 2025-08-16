@@ -11,13 +11,12 @@ class AdminListController(Resource):
 
     def post(self):
         try:
-            # Acepta JSON aunque no venga con Content-Type application/json
             data = request.get_json(force=True, silent=True) or {}
             admin_email = data.get('admin_email')
             password = data.get('password')
             status = data.get('status', 'active')
 
-            # Validaciones mínimas (mismo estilo que tu controlador guía)
+            # Validaciones mínimas 
             if not all([admin_email, password]):
                 return ServerResponse(
                     message="Fields 'admin_email' and 'password' are required.",
@@ -49,7 +48,7 @@ class AdminListController(Resource):
                     message="admin created",
                     status=StatusCode.CREATED
                 ).to_response()
-            except ValueError as ve:  # por ejemplo email duplicado
+            except ValueError as ve:  
                 return ServerResponse(
                     message=str(ve),
                     status=StatusCode.CONFLICT
@@ -114,7 +113,6 @@ class AdminItemController(Resource):
 
     def patch(self, id):
         try:
-            # Soporta text/plain y otros: force=True
             data = request.get_json(force=True, silent=True) or {}
             status = data.get('status')
             new_password = data.get('password')

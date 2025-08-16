@@ -41,7 +41,7 @@ class AppModel:
         admin_oid = None
         if admin_id:
             try:
-                admin_oid = ObjectId(admin_id)   # ← se guarda como ObjectId
+                admin_oid = ObjectId(admin_id)   
             except Exception:
                 raise ValueError("Invalid 'admin_id'")
 
@@ -100,7 +100,7 @@ class AppModel:
         if not doc or isinstance(doc, Exception):
             return None
         doc["_id"] = str(doc["_id"])
-        # devolver admin_id como string para homogeneidad en la API
+ 
         if "admin_id" in doc and isinstance(doc["admin_id"], ObjectId):
             doc["admin_id"] = str(doc["admin_id"])
         return doc

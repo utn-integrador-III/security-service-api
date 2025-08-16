@@ -4,7 +4,6 @@ from db.mongo_client import Connection
 from decouple import config
 from bson.objectid import ObjectId
 
-# Usa APPS_COLLECTION o por defecto 'apps'
 __dbmanager__ = Connection(config('APPS_COLLECTION', default='apps'))
 
 def get_by_name(name: str):

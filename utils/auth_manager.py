@@ -39,7 +39,3 @@ def auth_required(action=None, permission='', with_args=False):
     return decorator
 def generate_verification_code(length=4):
     return ''.join(random.choices(string.digits, k=length))
-
-
-
-
