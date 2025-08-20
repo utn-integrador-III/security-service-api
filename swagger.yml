@@ -222,8 +222,8 @@ definitions:
       screens:
         type: array
         items: { type: string }
-      app: { type: string, example: "vehiculos" }
-      app_client_id: { type: string, example: "vehiculos-client" }
+      admin_id: { type: string, example: "68a50dee109b1accea9c1ab1" }
+      app_id: { type: string, example: "688cfd1ee07d666bf510137d" }
 
   # ---------- Admin ----------
   AdminPost:
@@ -607,14 +607,16 @@ paths:
   /rol:
     get:
       tags: ["Roles"]
-      summary: "Obtener rol por nombre"
-      description: "Provee `name` como query param."
+      summary: "Listar roles o obtener rol por nombre"
+      description: "Lista todos los roles o obtiene un rol específico por nombre usando query param."
+      security:
+        - BearerAuth: []
       parameters:
         - in: query
           name: name
           type: string
-          required: true
-          description: "Role name (p.ej. Admin)"
+          required: false
+          description: "Role name (opcional, si no se proporciona lista todos)"
           x-example: "Admin"
       responses:
         "200":
@@ -622,11 +624,109 @@ paths:
           schema:
             type: object
             properties:
-              data: { $ref: "#/definitions/RoleGet" }
+              data: 
+                oneOf:
+                  - { $ref: "#/definitions/RoleGet" }
+                  - type: array
+                    items: { $ref: "#/definitions/RoleGet" }
               message: { type: string }
               message_code: { type: string }
         "404":
-          description: "No rol encontrado / name no enviado"
+          description: "Role not found"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "500":
+          description: "Internal Server Error"
+          schema: { $ref: "#/definitions/InternalErrorResponse" }
+    post:
+      tags: ["Roles"]
+      summary: "Crear nuevo rol"
+      description: "Crea un nuevo rol. El admin_id y app_id se extraen automáticamente del token JWT."
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required: [name, description, permissions]
+            properties:
+              name:
+                type: string
+                example: "Manager"
+                description: "Nombre del rol"
+              description:
+                type: string
+                example: "Rol de gerente con permisos limitados"
+                description: "Descripción del rol"
+              permissions:
+                type: array
+                items: { type: string }
+                example: ["read", "write", "update"]
+                description: "Lista de permisos del rol"
+      responses:
+        "201":
+          description: "Role created successfully"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Role created successfully" }
+              message_code: { type: string, example: "CREATED" }
+              status: { type: integer, example: 201 }
+        "400":
+          description: "Invalid request data"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Authorization required"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "409":
+          description: "Role already exists"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "422":
+          description: "Validation errors"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "500":
+          description: "Internal Server Error"
+          schema: { $ref: "#/definitions/InternalErrorResponse" }
+    delete:
+      tags: ["Roles"]
+      summary: "Eliminar rol"
+      description: "Elimina un rol por nombre. Solo el admin que creó el rol puede eliminarlo."
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required: [role_name]
+            properties:
+              role_name:
+                type: string
+                example: "Manager"
+                description: "Nombre del rol a eliminar"
+      responses:
+        "200":
+          description: "Role deleted successfully"
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: "Role deleted successfully" }
+              message_code: { type: string, example: "ROLE_DELETED" }
+              status: { type: integer, example: 200 }
+        "400":
+          description: "Invalid request data"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Authorization required"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "403":
+          description: "Unauthorized to delete this role"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "404":
+          description: "Role not found"
           schema: { $ref: "#/definitions/ErrorResponse" }
         "500":
           description: "Internal Server Error"

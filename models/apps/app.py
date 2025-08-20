@@ -2,7 +2,7 @@
 from datetime import datetime
 from urllib.parse import urlparse
 from bson import ObjectId
-from models.apps.db_queries import get_by_name, create_app, list_apps, get_by_id, update_by_id
+from models.apps.db_queries import get_by_name, create_app, list_apps, get_by_id, update_by_id, get_by_admin_id
 
 def _is_valid_url(url: str) -> bool:
     u = urlparse(url or "")
@@ -70,6 +70,10 @@ class AppModel:
         return AppModel._sanitize(get_by_id(id))
 
     @staticmethod
+    def get_by_admin_id(admin_id: str):
+        return [AppModel._sanitize(d) for d in get_by_admin_id(admin_id)]
+
+    @staticmethod
     def update(id: str, status: str | None = None, redirect_url: str | None = None):
         update = {}
         if status is not None:
@@ -100,7 +104,4 @@ class AppModel:
         if not doc or isinstance(doc, Exception):
             return None
         doc["_id"] = str(doc["_id"])
- 
-        if "admin_id" in doc and isinstance(doc["admin_id"], ObjectId):
-            doc["admin_id"] = str(doc["admin_id"])
         return doc
