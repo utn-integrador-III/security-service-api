@@ -4,7 +4,7 @@ from models.role.db_queries import __dbmanager__
 #from models.application.getapp import ApplicationModel
 
 class RoleModel:
-    def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, app, app_client_id=None, _id=None):
+    def __init__(self, name, description, permissions, creation_date, mod_date, is_active, default_role, screens, admin_id=None, app_id=None, _id=None):
         self.name = name
         self.description = description
         self.permissions = permissions
@@ -13,8 +13,8 @@ class RoleModel:
         self.is_active = is_active
         self.default_role = default_role
         self.screens = screens
-        self.app = app
-        self.app_client_id = app_client_id
+        self.admin_id = admin_id
+        self.app_id = app_id
         self._id = _id
         
     def to_dict(self):
@@ -28,8 +28,8 @@ class RoleModel:
             "is_active": self.is_active,
             "default_role": self.default_role,
             "screens": self.screens,
-            "app": self.app,
-            "app_client_id": self.app_client_id
+            "admin_id": self.admin_id,
+            "app_id": self.app_id
         }
 
     @classmethod
@@ -44,7 +44,7 @@ class RoleModel:
     @classmethod
     def get_by_name(cls, name):
         try:
-            result = __dbmanager__.find_one({"name": name})
+            result = __dbmanager__.collection.find_one({"name": name})
             if result:
                 return cls(
                     _id=result.get("_id"),
@@ -56,13 +56,52 @@ class RoleModel:
                     is_active=result.get("is_active"),
                     default_role=result.get("default_role"),
                     screens=result.get("screens"),
-                    app=result.get("app"),
-                    app_client_id=result.get("app_client_id")
+                    admin_id=result.get("admin_id"),
+                    app_id=result.get("app_id")
                 )
             return None
         except Exception as ex:
             logging.exception(ex)
             raise Exception("Failed to get rol by name: " + str(ex))
+
+    @classmethod
+    def list(cls, filters=None):
+        """
+        List all roles with optional filters
+        """
+        try:
+            query = {}
+            if filters:
+                if filters.get('is_active') is not None:
+                    query['is_active'] = filters['is_active']
+                if filters.get('app'):
+                    query['app'] = filters['app']
+                if filters.get('app_client_id'):
+                    query['app_client_id'] = filters['app_client_id']
+            
+            results = __dbmanager__.collection.find(query)
+            roles = []
+            
+            for result in results:
+                role = cls(
+                    _id=result.get("_id"),
+                    name=result.get("name"),
+                    description=result.get("description"),
+                    permissions=result.get("permissions"),
+                    creation_date=result.get("creation_date"),
+                    mod_date=result.get("mod_date"),
+                    is_active=result.get("is_active"),
+                    default_role=result.get("default_role"),
+                    screens=result.get("screens"),
+                    admin_id=result.get("admin_id"),
+                    app_id=result.get("app_id")
+                )
+                roles.append(role)
+            
+            return roles
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to list roles: " + str(ex))
     
 
     @classmethod
@@ -85,13 +124,13 @@ class RoleModel:
                 raise ValueError("Screens must be a list of strings")
 
             # Buscar rol 
-            existing_role = __dbmanager__.find_one({"name": role_name, "app_client_id": client_id})
+            existing_role = __dbmanager__.find_one({"name": role_name, "app_id": client_id})
             if not existing_role:
                 return None  # No existe el rol
             
 
             result = __dbmanager__.collection.update_one(
-                {"name": role_name, "app_client_id": client_id},
+                {"name": role_name, "app_id": client_id},
                 {#Para poder seguir agregando sin que se borren existentes
                     "$addToSet": {
                         "screens": {"$each": new_screens}
@@ -104,7 +143,7 @@ class RoleModel:
              # No se agregó nada, las screens ya estaban
                 return "DUPLICATE"
 
-            updated_role = __dbmanager__.find_one({"name": role_name, "app_client_id": client_id})
+            updated_role = __dbmanager__.find_one({"name": role_name, "app_id": client_id})
             return cls(
                 _id=updated_role.get("_id"),
                 name=updated_role.get("name"),
@@ -115,8 +154,8 @@ class RoleModel:
                 is_active=updated_role.get("is_active"),
                 default_role=updated_role.get("default_role"),
                 screens=updated_role.get("screens"),
-                app=updated_role.get("app"),
-                app_client_id=updated_role.get("app_client_id")
+                admin_id=updated_role.get("admin_id"),
+                app_id=updated_role.get("app_id")
             )
         except Exception as ex:
             logging.exception(ex)
@@ -129,7 +168,7 @@ class RoleModel:
         try:
             result = __dbmanager__.collection.delete_one({
                 "name": role_name,
-                "app_client_id": client_id
+                "app_id": client_id
             })
             return result.deleted_count > 0
         except Exception as e:
@@ -140,7 +179,7 @@ class RoleModel:
     @classmethod
     def get_by_name_and_client_id(cls, name, client_id):
         try:
-            result = __dbmanager__.find_one({"name": name, "app_client_id": client_id})
+            result = __dbmanager__.find_one({"name": name, "app_id": client_id})
             if result:
                 return cls(
                     _id=result.get("_id"),
@@ -152,11 +191,11 @@ class RoleModel:
                     is_active=result.get("is_active"),
                     default_role=result.get("default_role"),
                     screens=result.get("screens"),
-                    app=result.get("app"),
-                    app_client_id=result.get("app_client_id")
+                    admin_id=result.get("admin_id"),
+                    app_id=result.get("app_id")
                 )
             return None
         except Exception as ex:
             logging.exception(ex)
-            raise Exception("Failed to get role by name and client_id: " + str(ex))
+            raise Exception("Failed to get role by name and app_id: " + str(ex))
 

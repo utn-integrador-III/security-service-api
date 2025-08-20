@@ -34,6 +34,13 @@ def get_by_id(id: str):
         logging.error(f"DB error get_by_id: {str(e)}", exc_info=True)
         return None
 
+def get_by_admin_id(admin_id: str):
+    try:
+        return __dbmanager__.get_by_query({'admin_id': ObjectId(admin_id)})
+    except Exception as e:
+        logging.error(f"DB error get_by_admin_id: {str(e)}", exc_info=True)
+        return []
+
 def update_by_id(id: str, new_data: dict):
     try:
         return __dbmanager__.update_by_condition({'_id': ObjectId(id)}, new_data)

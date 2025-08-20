@@ -3,9 +3,12 @@ from flask import request
 from utils.server_response import ServerResponse, StatusCode
 from models.role.role import RoleModel
 from models.user.user import UserModel
+from models.apps.app import AppModel
+from utils.jwt_manager import validate_jwt
 from .parser import RolParser
 import logging
 from datetime import datetime
+from bson import ObjectId
 
 #from models.application.getapp import ApplicationModel
 from models.role.role import RoleModel
@@ -14,47 +17,256 @@ class RolController(Resource):
     route = "/rol"
 
     """
-    Get a rol
+    Get roles - list all roles or get by name if provided
     """
     def get(self):
         try:
-            arg = RolParser.parse_put_request()
-            object_name = arg['name']
-
-            if not object_name:
-                response = ServerResponse(message="name not inserted", message_code="ROL_NOT_FOUND", status=StatusCode.NOT_FOUND)
-                return response.to_response()
+            # Check if name parameter is provided in query string
+            name = request.args.get('name')
             
-            result = RoleModel.get_by_name(object_name)
-            
-            if isinstance(result, dict) and "error" in result:
-                response = ServerResponse(
-                    data={},
-                    message=result["error"],
-                    status=StatusCode.INTERNAL_SERVER_ERROR,
-                )
-                return response.to_response()
+            if name:
+                # Get specific role by name
+                result = RoleModel.get_by_name(name)
+                
+                if isinstance(result, dict) and "error" in result:
+                    response = ServerResponse(
+                        data={},
+                        message=result["error"],
+                        status=StatusCode.INTERNAL_SERVER_ERROR,
+                    )
+                    return response.to_response()
 
-            if not result:  # If there are no rol objects
-                response = ServerResponse(
-                    data={},
-                    message="No rol objects found",
-                    message_code="NO_DATA",
-                    status=StatusCode.OK,
-                )
-                return response.to_response()
+                if not result:
+                    response = ServerResponse(
+                        data={},
+                        message="Role not found",
+                        message_code="ROL_NOT_FOUND",
+                        status=StatusCode.NOT_FOUND,
+                    )
+                    return response.to_response()
+                else:
+                    response = ServerResponse(
+                        data=result.to_dict(),
+                        message="Role found",
+                        message_code="OK_MSG",
+                        status=StatusCode.OK,
+                    )
+                    return response.to_response()
             else:
-                response = ServerResponse(
-                    data=result.to_dict(),  # Convert the RolModel instance to a dictionary
-                    message="ROL_FOUND",
-                    message_code="OK_MSG",
-                    status=StatusCode.OK,
-                )
-                return response.to_response()
+                # List all roles
+                result = RoleModel.list()
+                
+                if isinstance(result, dict) and "error" in result:
+                    response = ServerResponse(
+                        data={},
+                        message=result["error"],
+                        status=StatusCode.INTERNAL_SERVER_ERROR,
+                    )
+                    return response.to_response()
+
+                if not result:
+                    response = ServerResponse(
+                        data=[],
+                        message="No roles found",
+                        message_code="NO_DATA",
+                        status=StatusCode.OK,
+                    )
+                    return response.to_response()
+                else:
+                    # Convert list of RoleModel instances to dictionaries
+                    roles_data = [role.to_dict() if hasattr(role, 'to_dict') else role for role in result]
+                    response = ServerResponse(
+                        data=roles_data,
+                        message="Roles retrieved successfully",
+                        message_code="OK_MSG",
+                        status=StatusCode.OK,
+                    )
+                    return response.to_response()
         except Exception as ex:
             logging.error(ex)
             response = ServerResponse(status=StatusCode.INTERNAL_SERVER_ERROR)
             return response.to_response()
+
+    """
+    Create a new role
+    """
+    def post(self):
+        try:
+            data = request.get_json()
+            name = data.get('name')
+            description = data.get('description', '')
+            permissions = data.get('permissions', [])
+
+            # Obtener el admin_id del token JWT
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return ServerResponse(
+                    message="Authorization header required",
+                    message_code="AUTH_REQUIRED",
+                    status=StatusCode.UNAUTHORIZED
+                ).to_response()
+
+            token = auth_header.split(' ')[1]
+            jwt_data = validate_jwt(token)
+            if not jwt_data:
+                return ServerResponse(
+                    message="Invalid or expired token",
+                    message_code="INVALID_TOKEN",
+                    status=StatusCode.UNAUTHORIZED
+                ).to_response()
+
+            admin_id = jwt_data['identity']
+
+            # Obtener el app_id del admin
+            admin_apps = AppModel.get_by_admin_id(admin_id)
+            app_id = None
+            if admin_apps and len(admin_apps) > 0:
+                app_id = admin_apps[0].get('_id')  # Tomar la primera app del admin
+            else:
+                return ServerResponse(
+                    message="Admin has no associated applications",
+                    message_code="NO_APP_FOUND",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Validación del nombre
+            if not name or len(name.strip()) < 2:
+                return ServerResponse(
+                    message="Invalid role name",
+                    message_code="INVALID_NAME",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Validación de permisos
+            if not isinstance(permissions, list):
+                return ServerResponse(
+                    message="Permissions must be a list",
+                    message_code="INVALID_PERMISSIONS",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Verificar si ya existe un rol con el mismo nombre
+            existing_role = RoleModel.get_by_name(name.strip())
+            if existing_role:
+                return ServerResponse(
+                    message="Role already exists",
+                    message_code="DUPLICATE_ROLE",
+                    status=StatusCode.CONFLICT
+                ).to_response()
+
+            # Crear el objeto de datos del rol
+            role_data = {
+                "name": name.strip(),
+                "description": description.strip(),
+                "permissions": permissions,
+                "creation_date": datetime.utcnow(),
+                "mod_date": datetime.utcnow(),
+                "is_active": True,
+                "default_role": False,
+                "screens": [],                   # Vacío por defecto
+                "admin_id": admin_id,           # ID del admin que crea el rol
+                "app_id": ObjectId(app_id)      # ID de la app asociada al admin
+            }
+
+            new_role = RoleModel.create(role_data)
+
+            if not new_role:
+                return ServerResponse(
+                    message="Failed to create role",
+                    message_code="CREATE_FAILED",
+                    status=StatusCode.INTERNAL_SERVER_ERROR
+                ).to_response()
+
+            return ServerResponse(
+                data=new_role.to_dict(),
+                message="Role created successfully",
+                message_code="CREATED",
+                status=StatusCode.CREATED
+            ).to_response()
+
+        except Exception as e:
+            logging.error(f"Error creating role: {str(e)}", exc_info=True)
+            return ServerResponse(
+                message="Internal server error",
+                message_code="INTERNAL_SERVER_ERROR",
+                status=StatusCode.INTERNAL_SERVER_ERROR
+            ).to_response()
+
+    """
+    Delete a role by name
+    """
+    def delete(self):
+        try:
+            data = request.get_json()
+            role_name = data.get("role_name")
+
+            if not role_name:
+                return ServerResponse(
+                    message="Role name is required",
+                    message_code="INVALID_ROLE_NAME",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Obtener el admin_id del token JWT
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return ServerResponse(
+                    message="Authorization header required",
+                    message_code="AUTH_REQUIRED",
+                    status=StatusCode.UNAUTHORIZED
+                ).to_response()
+
+            token = auth_header.split(' ')[1]
+            jwt_data = validate_jwt(token)
+            if not jwt_data:
+                return ServerResponse(
+                    message="Invalid or expired token",
+                    message_code="INVALID_TOKEN",
+                    status=StatusCode.UNAUTHORIZED
+                ).to_response()
+
+            admin_id = jwt_data['identity']
+
+            # Buscar el rol por nombre
+            existing_role = RoleModel.get_by_name(role_name)
+            if not existing_role:
+                return ServerResponse(
+                    message="Role not found",
+                    message_code="ROLE_NOT_FOUND",
+                    status=StatusCode.NOT_FOUND
+                ).to_response()
+
+            # VALIDACIÓN DE SEGURIDAD: Solo el admin que creó el rol puede eliminarlo
+            if existing_role.admin_id != admin_id:
+                return ServerResponse(
+                    message="You can only delete roles that you created",
+                    message_code="UNAUTHORIZED_DELETE",
+                    status=StatusCode.FORBIDDEN
+                ).to_response()
+
+            # Eliminar el rol usando el método del modelo
+            deleted = RoleModel.delete_by_name_and_client_id(role_name, existing_role.app_id)
+
+            if not deleted:
+                return ServerResponse(
+                    message="Failed to delete role",
+                    message_code="DELETE_FAILED",
+                    status=StatusCode.INTERNAL_SERVER_ERROR
+                ).to_response()
+
+            return ServerResponse(
+                message="Role deleted successfully",
+                message_code="ROLE_DELETED",
+                status=StatusCode.OK
+            ).to_response()
+
+        except Exception as e:
+            logging.error(f"Error deleting role: {str(e)}", exc_info=True)
+            return ServerResponse(
+                message="Internal server error",
+                message_code="INTERNAL_SERVER_ERROR",
+                status=StatusCode.INTERNAL_SERVER_ERROR
+            ).to_response()
 
     # Nuevo endpoint: /roleByUser/<email>/<app>
     @staticmethod
