@@ -96,38 +96,7 @@ class RolController(Resource):
             name = data.get('name')
             description = data.get('description', '')
             permissions = data.get('permissions', [])
-
-            # Obtener el admin_id del token JWT
-            auth_header = request.headers.get('Authorization')
-            if not auth_header or not auth_header.startswith('Bearer '):
-                return ServerResponse(
-                    message="Authorization header required",
-                    message_code="AUTH_REQUIRED",
-                    status=StatusCode.UNAUTHORIZED
-                ).to_response()
-
-            token = auth_header.split(' ')[1]
-            jwt_data = validate_jwt(token)
-            if not jwt_data:
-                return ServerResponse(
-                    message="Invalid or expired token",
-                    message_code="INVALID_TOKEN",
-                    status=StatusCode.UNAUTHORIZED
-                ).to_response()
-
-            admin_id = jwt_data['identity']
-
-            # Obtener el app_id del admin
-            admin_apps = AppModel.get_by_admin_id(admin_id)
-            app_id = None
-            if admin_apps and len(admin_apps) > 0:
-                app_id = admin_apps[0].get('_id')  # Tomar la primera app del admin
-            else:
-                return ServerResponse(
-                    message="Admin has no associated applications",
-                    message_code="NO_APP_FOUND",
-                    status=StatusCode.UNPROCESSABLE_ENTITY
-                ).to_response()
+            admin_id = data.get('admin_id')  # Campo opcional enviado por el frontend
 
             # Validación del nombre
             if not name or len(name.strip()) < 2:
@@ -163,10 +132,26 @@ class RolController(Resource):
                 "mod_date": datetime.utcnow(),
                 "is_active": True,
                 "default_role": False,
-                "screens": [],                   # Vacío por defecto
-                "admin_id": admin_id,           # ID del admin que crea el rol
-                "app_id": ObjectId(app_id)      # ID de la app asociada al admin
+                "screens": []                   # Vacío por defecto
             }
+
+            # Agregar campos opcionales si se proporcionan
+            if admin_id:
+                role_data["admin_id"] = str(admin_id) if isinstance(admin_id, ObjectId) else admin_id
+
+            # Obtener app_id automáticamente si se proporciona admin_id
+            if admin_id:
+                try:
+                    # Buscar las apps asociadas al admin
+                    admin_apps = AppModel.get_by_admin_id(admin_id)
+                    if admin_apps and len(admin_apps) > 0:
+                        # Usar la primera app del admin
+                        role_data["app_id"] = ObjectId(admin_apps[0]["_id"])
+                        print(f"🔍 App ID asignado automáticamente: {role_data['app_id']}")
+                except Exception as e:
+                    print(f"⚠️ No se pudo obtener app_id automáticamente: {e}")
+                    print(f"🔍 Admin ID: {admin_id}")
+                    print(f"🔍 Apps encontradas: {admin_apps}")
 
             new_role = RoleModel.create(role_data)
 

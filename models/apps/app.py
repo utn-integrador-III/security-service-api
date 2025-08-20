@@ -74,8 +74,16 @@ class AppModel:
         return [AppModel._sanitize(d) for d in get_by_admin_id(admin_id)]
 
     @staticmethod
-    def update(id: str, status: str | None = None, redirect_url: str | None = None):
+    def update(id: str, name: str | None = None, status: str | None = None, redirect_url: str | None = None):
         update = {}
+        if name is not None:
+            if not name or len(name.strip()) < 2:
+                raise ValueError("Invalid 'name'")
+            # Verificar que el nuevo nombre no exista ya (excepto para la app actual)
+            existing_app = get_by_name(name.strip())
+            if existing_app and str(existing_app.get('_id')) != id:
+                raise ValueError("App name already exists")
+            update["name"] = name.strip()
         if status is not None:
             if status not in ('active', 'inactive'):
                 raise ValueError("Invalid 'status'")

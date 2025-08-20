@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script para probar la creación de roles con la estructura correcta
+Script para diagnosticar por qué no se está asignando el app_id automáticamente
 """
 
 import requests
@@ -27,8 +27,20 @@ def login_admin():
         print(f"❌ Error en login: {response.status_code} - {response.text}")
         return None
 
-def create_test_role(token, admin_id):
-    """Crear un rol de prueba con la estructura correcta"""
+def get_admin_apps(token):
+    """Obtener las apps del admin"""
+    url = f"{BASE_URL}/apps"
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()["data"]
+    else:
+        print(f"❌ Error obteniendo apps: {response.status_code} - {response.text}")
+        return []
+
+def test_app_id_assignment(token, admin_id):
+    """Probar la asignación automática de app_id"""
     url = f"{BASE_URL}/rol"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -37,14 +49,15 @@ def create_test_role(token, admin_id):
     
     # Datos del rol de prueba
     role_data = {
-        "name": f"Test Role {datetime.now().strftime('%Y%m%d_%H%M%S')}",
-        "description": "Rol de prueba con estructura correcta",
-        "permissions": ["Read", "Write", "Update", "Delete"],
+        "name": f"Test AppID {datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        "description": "Rol para probar asignación automática de app_id",
+        "permissions": ["Read", "Write"],
         "admin_id": admin_id,
         "created_by": admin_id
     }
     
-    print(f"🚀 Creando rol con datos: {json.dumps(role_data, indent=2)}")
+    print(f"🚀 Creando rol con datos:")
+    print(json.dumps(role_data, indent=2))
     
     response = requests.post(url, json=role_data, headers=headers)
     
@@ -54,20 +67,12 @@ def create_test_role(token, admin_id):
         print("📋 Estructura del rol creado:")
         print(json.dumps(created_role, indent=2, default=str))
         
-        # Verificar que tenga todos los campos requeridos
-        required_fields = ["_id", "name", "description", "permissions", "app_id", 
-                          "creation_date", "mod_date", "is_active", "screens", 
-                          "default_role", "admin_id", "created_by"]
-        
-        missing_fields = []
-        for field in required_fields:
-            if field not in created_role or created_role[field] is None:
-                missing_fields.append(field)
-        
-        if missing_fields:
-            print(f"⚠️ Campos faltantes: {missing_fields}")
+        # Verificar app_id
+        app_id = created_role.get("app_id")
+        if app_id:
+            print(f"✅ App ID asignado correctamente: {app_id}")
         else:
-            print("✅ Todos los campos requeridos están presentes")
+            print("❌ App ID NO fue asignado")
         
         return created_role
     else:
@@ -75,10 +80,10 @@ def create_test_role(token, admin_id):
         return None
 
 def main():
-    print("🧪 Probando creación de roles con estructura correcta...")
+    print("🔍 Diagnóstico de asignación automática de app_id...")
     
     # 1. Login como admin
-    print("🔐 Iniciando sesión como admin...")
+    print("\n🔐 Iniciando sesión como admin...")
     token = login_admin()
     if not token:
         print("❌ No se pudo obtener el token. Saliendo...")
@@ -96,15 +101,30 @@ def main():
         print(f"❌ Error decodificando token: {e}")
         return
     
-    # 3. Crear rol de prueba
-    print("\n🔄 Creando rol de prueba...")
-    created_role = create_test_role(token, admin_id)
+    # 3. Obtener apps del admin
+    print("\n📋 Obteniendo apps del admin...")
+    apps = get_admin_apps(token)
+    if not apps:
+        print("❌ No se pudieron obtener las apps")
+        return
+    
+    print(f"✅ Se obtuvieron {len(apps)} apps:")
+    for i, app in enumerate(apps):
+        print(f"  {i+1}. {app['name']} (ID: {app['_id']})")
+    
+    # 4. Probar creación de rol con app_id automático
+    print("\n🔄 Probando creación de rol con app_id automático...")
+    created_role = test_app_id_assignment(token, admin_id)
     
     if created_role:
-        print("\n🎉 ¡Prueba completada exitosamente!")
-        print("📊 El rol se creó con la estructura correcta")
+        print("\n🎉 Diagnóstico completado")
+        app_id = created_role.get("app_id")
+        if app_id:
+            print("✅ El app_id se está asignando correctamente")
+        else:
+            print("❌ El app_id NO se está asignando")
     else:
-        print("\n❌ La prueba falló")
+        print("\n❌ El diagnóstico falló")
 
 if __name__ == "__main__":
     main()

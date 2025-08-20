@@ -199,3 +199,121 @@ class RoleModel:
             logging.exception(ex)
             raise Exception("Failed to get role by name and app_id: " + str(ex))
 
+    @classmethod
+    def get_by_id(cls, role_id):
+        """Obtener rol por ID"""
+        try:
+            from bson import ObjectId
+            result = __dbmanager__.collection.find_one({"_id": ObjectId(role_id)})
+            if result:
+                return cls(
+                    _id=result.get("_id"),
+                    name=result.get("name"),
+                    description=result.get("description"),
+                    permissions=result.get("permissions"),
+                    creation_date=result.get("creation_date"),
+                    mod_date=result.get("mod_date"),
+                    is_active=result.get("is_active"),
+                    default_role=result.get("default_role"),
+                    screens=result.get("screens"),
+                    admin_id=result.get("admin_id"),
+                    app_id=result.get("app_id")
+                )
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to get role by ID: " + str(ex))
+
+    @classmethod
+    def update(cls, role_id, update_data):
+        """Actualizar rol por ID"""
+        try:
+            from bson import ObjectId
+            from datetime import datetime
+            
+            # Preparar los campos a actualizar
+            update_fields = {}
+            
+            if 'name' in update_data:
+                name = update_data['name'].strip()
+                if not name or len(name) < 2:
+                    raise ValueError("Role name must be at least 2 characters long")
+                
+                # Verificar que el nuevo nombre no exista ya (excepto para el rol actual)
+                existing_role = __dbmanager__.collection.find_one({
+                    "name": name,
+                    "_id": {"$ne": ObjectId(role_id)}
+                })
+                if existing_role:
+                    raise ValueError("Role name already exists")
+                
+                update_fields["name"] = name
+            
+            if 'description' in update_data:
+                description = update_data['description'].strip()
+                if description is not None:
+                    update_fields["description"] = description
+            
+            if 'permissions' in update_data:
+                permissions = update_data['permissions']
+                if not isinstance(permissions, list):
+                    raise ValueError("Permissions must be a list")
+                update_fields["permissions"] = permissions
+            
+            if 'is_active' in update_data:
+                is_active = update_data['is_active']
+                if not isinstance(is_active, bool):
+                    raise ValueError("is_active must be a boolean")
+                update_fields["is_active"] = is_active
+            
+            if 'screens' in update_data:
+                screens = update_data['screens']
+                if not isinstance(screens, list):
+                    raise ValueError("Screens must be a list")
+                update_fields["screens"] = screens
+            
+            if 'admin_id' in update_data:
+                admin_id = update_data['admin_id']
+                if admin_id is not None:
+                    # Mantener como string
+                    update_fields["admin_id"] = str(admin_id)
+                else:
+                    # Si es None, permitir establecer admin_id como null
+                    update_fields["admin_id"] = None
+            
+
+            
+            if 'app_id' in update_data:
+                app_id = update_data['app_id']
+                if app_id is not None:
+                    # Convertir a ObjectId si es string
+                    if isinstance(app_id, str):
+                        app_id = ObjectId(app_id)
+                    update_fields["app_id"] = app_id
+                else:
+                    # Si es None, permitir establecer app_id como null
+                    update_fields["app_id"] = None
+            
+            # Siempre actualizar la fecha de modificación
+            update_fields["mod_date"] = datetime.utcnow()
+            
+            # Si no hay campos para actualizar, retornar error
+            if not update_fields:
+                raise ValueError("No valid fields to update")
+            
+            # Actualizar en la base de datos
+            result = __dbmanager__.collection.update_one(
+                {"_id": ObjectId(role_id)},
+                {"$set": update_fields}
+            )
+            
+            if result.modified_count == 0:
+                return None  # No se actualizó nada
+            
+            # Retornar el rol actualizado
+            return cls.get_by_id(role_id)
+            
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to update role: " + str(ex))
+
