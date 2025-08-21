@@ -516,6 +516,126 @@ Content-Type: application/json
 
 **Nota de Seguridad:** Solo el `user_admin` que creó el rol puede eliminarlo. Esto previene que un admin elimine roles creados por otros admins.
 
+### **3.4 GET /rol/{id} - Obtener Rol por ID**
+**Descripción:** Obtiene un rol específico por su ID. Solo el admin que creó el rol puede verlo.
+
+**URL:** `http://localhost:5002/rol/{id}`
+
+**Método:** `GET`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "name": "Manager",
+    "description": "Rol de gerente con permisos limitados",
+    "permissions": ["read", "write", "update"],
+    "creation_date": "2023-09-06T10:30:00Z",
+    "mod_date": "2023-09-06T10:30:00Z",
+    "is_active": true,
+    "default_role": false,
+    "screens": [],
+    "admin_id": "68a50dee109b1accea9c1ab1",
+    "app_id": "688cfd1ee07d666bf510137d"
+  },
+  "message": "Role retrieved successfully",
+  "message_code": "ROLE_FOUND"
+}
+```
+
+### **3.5 PATCH /rol/{id} - Actualizar Rol**
+**Descripción:** Actualiza un rol existente. Solo el admin que creó el rol puede modificarlo.
+
+**URL:** `http://localhost:5002/rol/{id}`
+
+**Método:** `PATCH`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body (JSON):**
+```json
+{
+  "name": "Manager Updated",
+  "description": "Rol de gerente actualizado",
+  "permissions": ["read", "write", "update", "delete"],
+  "is_active": true,
+  "screens": ["dashboard", "users", "reports"]
+}
+```
+
+**Campos disponibles para actualizar:**
+- `name`: string (mínimo 2 caracteres, debe ser único)
+- `description`: string
+- `permissions`: array de strings
+- `is_active`: boolean
+- `screens`: array de strings
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "name": "Manager Updated",
+    "description": "Rol de gerente actualizado",
+    "permissions": ["read", "write", "update", "delete"],
+    "creation_date": "2023-09-06T10:30:00Z",
+    "mod_date": "2023-09-06T11:45:00Z",
+    "is_active": true,
+    "default_role": false,
+    "screens": ["dashboard", "users", "reports"],
+    "admin_id": "68a50dee109b1accea9c1ab1",
+    "app_id": "688cfd1ee07d666bf510137d"
+  },
+  "message": "Role updated successfully",
+  "message_code": "ROLE_UPDATED"
+}
+```
+
+**Respuestas de error:**
+- **400:** No fields provided for update
+- **401:** Authorization required
+- **403:** Unauthorized to modify this role
+- **404:** Role not found
+- **422:** Validation errors (nombre duplicado, campos inválidos)
+
+### **3.6 DELETE /rol/{id} - Eliminar Rol por ID**
+**Descripción:** Elimina un rol específico por su ID. Solo el admin que creó el rol puede eliminarlo.
+
+**URL:** `http://localhost:5002/rol/{id}`
+
+**Método:** `DELETE`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "message": "Role deleted successfully",
+  "message_code": "ROLE_DELETED"
+}
+```
+
+**Respuestas de error:**
+- **401:** Authorization required
+- **403:** Unauthorized to delete this role
+- **404:** Role not found
+- **500:** Internal Server Error
+
 ---
 
 ## 👨‍💼 **ENDPOINTS DE ADMIN**
@@ -609,7 +729,7 @@ Authorization: Bearer <token>
 ---
 
 ### 17. **POST** `/apps`
-**Descripción:** Crear aplicación
+**Descripción:** Crear aplicación y redirigir al login de administrador
 
 **Headers:**
 ```
@@ -624,6 +744,29 @@ Authorization: Bearer <token>
   "redirect_url": "http://localhost:3000/callback",
   "status": "active",
   "admin_id": "66df7a..."
+}
+```
+
+**Respuesta exitosa (201):**
+```json
+{
+  "data": {
+    "app": {
+      "_id": "66df7a...",
+      "name": "vehiculos",
+      "redirect_url": "http://localhost:3000/callback",
+      "status": "active",
+      "admin_id": "66df7a...",
+      "creation_date": "2024-01-01T00:00:00Z"
+    },
+    "redirect_to": {
+      "url": "/auth/admin/login",
+      "message": "App created successfully. Please login as administrator to manage your application.",
+      "type": "admin_login"
+    }
+  },
+  "message": "App created successfully. Redirecting to admin login...",
+  "message_code": "CREATED"
 }
 ```
 
@@ -642,7 +785,7 @@ Authorization: Bearer <token>
 ---
 
 ### 19. **PATCH** `/apps/{id}`
-**Descripción:** Actualizar aplicación
+**Descripción:** Actualizar aplicación (name/status/redirect_url)
 
 **Headers:**
 ```
@@ -656,9 +799,29 @@ Authorization: Bearer <token>
 ```json
 {
   "name": "vehiculos-updated",
-  "status": "inactive"
+  "status": "inactive",
+  "redirect_url": "http://localhost:3000/new-callback"
 }
 ```
+
+**Campos disponibles para actualizar:**
+- `name`: string (mínimo 2 caracteres, debe ser único)
+- `status`: string (enum: ["active","inactive"])
+- `redirect_url`: string
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {},
+  "message": "app updated",
+  "message_code": "OK"
+}
+```
+
+**Respuestas de error:**
+- **400:** Missing fields
+- **404:** app not found
+- **500:** Internal Server Error
 
 ---
 

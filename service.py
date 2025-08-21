@@ -6,6 +6,7 @@ from controllers.auth.admin_login import AdminLoginController
 from controllers.auth.verify_auth import AuthController
 from controllers.auth.refresh_token import RefreshController
 from controllers.rol.rol_controller import RolController
+from controllers.rol.rol_item_controller import RolItemController
 from controllers.admin.admin_controller import AdminListController, AdminItemController
 from controllers.apps.apps_controller import AppsListController, AppsItemController
 from controllers.user.user_controller import (
@@ -26,6 +27,7 @@ def addServiceLayer(api: Api):
     api.add_resource(RefreshController, RefreshController.route)
     # Rol
     api.add_resource(RolController, RolController.route)
+    api.add_resource(RolItemController, RolItemController.route)
 
     #Logout
     api.add_resource(LogoutController,LogoutController.route)

@@ -24,7 +24,22 @@ class AppsListController(Resource):
 
             try:
                 created = AppModel.create(name, redirect_url, status, admin_id)
-                return ServerResponse(data=created, message="app created", status=StatusCode.CREATED).to_response()
+                
+                # Agregar información de redirección al login de administrador
+                response_data = {
+                    "app": created,
+                    "redirect_to": {
+                        "url": "/auth/admin/login",
+                        "message": "App created successfully. Please login as administrator to manage your application.",
+                        "type": "admin_login"
+                    }
+                }
+                
+                return ServerResponse(
+                    data=response_data, 
+                    message="App created successfully. Redirecting to admin login...", 
+                    status=StatusCode.CREATED
+                ).to_response()
             except ValueError as ve:
                 return ServerResponse(message=str(ve), status=StatusCode.UNPROCESSABLE_ENTITY).to_response()
             except Exception as e:
@@ -67,17 +82,18 @@ class AppsItemController(Resource):
     def patch(self, id):
         try:
             data = request.get_json(force=True, silent=True) or {}
+            name = data.get('name')
             status = data.get('status')
             redirect_url = data.get('redirect_url')
 
-            if status is None and redirect_url is None:
+            if status is None and redirect_url is None and name is None:
                 return ServerResponse(
-                    message="At least one of 'status' or 'redirect_url' must be provided.",
+                    message="At least one of 'name', 'status' or 'redirect_url' must be provided.",
                     status=StatusCode.BAD_REQUEST
                 ).to_response()
 
             try:
-                updated = AppModel.update(id, status=status, redirect_url=redirect_url)
+                updated = AppModel.update(id, name=name, status=status, redirect_url=redirect_url)
             except ValueError as ve:
                 return ServerResponse(message=str(ve), status=StatusCode.UNPROCESSABLE_ENTITY).to_response()
 

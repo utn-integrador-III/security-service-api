@@ -732,6 +732,129 @@ paths:
           description: "Internal Server Error"
           schema: { $ref: "#/definitions/InternalErrorResponse" }
 
+  /rol/{id}:
+    parameters:
+      - in: path
+        name: id
+        type: string
+        required: true
+        description: "Role ID (MongoDB ObjectId)"
+    get:
+      tags: ["Roles"]
+      summary: "Obtener rol por ID"
+      description: "Obtiene un rol específico por su ID. Solo el admin que creó el rol puede verlo."
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Role found"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Role retrieved successfully" }
+              message_code: { type: string, example: "ROLE_FOUND" }
+        "401":
+          description: "Authorization required"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "403":
+          description: "Unauthorized to view this role"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "404":
+          description: "Role not found"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "500":
+          description: "Internal Server Error"
+          schema: { $ref: "#/definitions/InternalErrorResponse" }
+    patch:
+      tags: ["Roles"]
+      summary: "Actualizar rol"
+      description: "Actualiza un rol existente. Solo el admin que creó el rol puede modificarlo."
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "Manager Updated"
+                description: "Nuevo nombre del rol (opcional)"
+              description:
+                type: string
+                example: "Rol de gerente actualizado"
+                description: "Nueva descripción del rol (opcional)"
+              permissions:
+                type: array
+                items: { type: string }
+                example: ["read", "write", "update", "delete"]
+                description: "Nueva lista de permisos (opcional)"
+              is_active:
+                type: boolean
+                example: true
+                description: "Estado activo/inactivo del rol (opcional)"
+              screens:
+                type: array
+                items: { type: string }
+                example: ["dashboard", "users", "reports"]
+                description: "Nueva lista de pantallas (opcional)"
+      responses:
+        "200":
+          description: "Role updated successfully"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Role updated successfully" }
+              message_code: { type: string, example: "ROLE_UPDATED" }
+        "400":
+          description: "No fields provided for update"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Authorization required"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "403":
+          description: "Unauthorized to modify this role"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "404":
+          description: "Role not found"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "422":
+          description: "Validation errors"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "500":
+          description: "Internal Server Error"
+          schema: { $ref: "#/definitions/InternalErrorResponse" }
+    delete:
+      tags: ["Roles"]
+      summary: "Eliminar rol por ID"
+      description: "Elimina un rol específico por su ID. Solo el admin que creó el rol puede eliminarlo."
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Role deleted successfully"
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: "Role deleted successfully" }
+              message_code: { type: string, example: "ROLE_DELETED" }
+        "401":
+          description: "Authorization required"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "403":
+          description: "Unauthorized to delete this role"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "404":
+          description: "Role not found"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "500":
+          description: "Internal Server Error"
+          schema: { $ref: "#/definitions/InternalErrorResponse" }
+
   # ---------- Admin ----------
   /admin:
     post:
@@ -844,6 +967,7 @@ paths:
     post:
       tags: ["Apps"]
       summary: "Crear app"
+      description: "Crea una nueva aplicación y redirige al login de administrador"
       parameters:
         - in: body
           name: body
@@ -851,8 +975,22 @@ paths:
           schema: { $ref: "#/definitions/AppPost" }
       responses:
         "201":
-          description: "app created"
-          schema: { $ref: "#/definitions/ServerResponse" }
+          description: "app created - redirecting to admin login"
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  app: { $ref: "#/definitions/AppGet" }
+                  redirect_to:
+                    type: object
+                    properties:
+                      url: { type: string, example: "/auth/admin/login" }
+                      message: { type: string, example: "App created successfully. Please login as administrator to manage your application." }
+                      type: { type: string, example: "admin_login" }
+              message: { type: string, example: "App created successfully. Redirecting to admin login..." }
+              message_code: { type: string, example: "CREATED" }
         "422":
           description: "app name already exists / invalid input"
           schema: { $ref: "#/definitions/ErrorResponse" }
@@ -906,7 +1044,7 @@ paths:
           schema: { $ref: "#/definitions/InternalErrorResponse" }
     patch:
       tags: ["Apps"]
-      summary: "Actualizar app (status/redirect_url)"
+      summary: "Actualizar app (name/status/redirect_url)"
       parameters:
         - in: body
           name: body
@@ -914,6 +1052,7 @@ paths:
           schema:
             type: object
             properties:
+              name: { type: string, minLength: 2 }
               status: { type: string, enum: ["active","inactive"] }
               redirect_url: { type: string }
       responses:
