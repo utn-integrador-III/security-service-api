@@ -123,8 +123,13 @@ class RoleModel:
             if not isinstance(new_screens, list):
                 raise ValueError("Screens must be a list of strings")
 
-            # Buscar rol 
-            existing_role = __dbmanager__.find_one({"name": role_name, "app_id": client_id})
+            # Convertir client_id a ObjectId si es string
+            from bson import ObjectId
+            if isinstance(client_id, str):
+                client_id = ObjectId(client_id)
+
+            # Buscar rol usando la colección directamente
+            existing_role = __dbmanager__.collection.find_one({"name": role_name, "app_id": client_id})
             if not existing_role:
                 return None  # No existe el rol
             
@@ -143,7 +148,7 @@ class RoleModel:
              # No se agregó nada, las screens ya estaban
                 return "DUPLICATE"
 
-            updated_role = __dbmanager__.find_one({"name": role_name, "app_id": client_id})
+            updated_role = __dbmanager__.collection.find_one({"name": role_name, "app_id": client_id})
             return cls(
                 _id=updated_role.get("_id"),
                 name=updated_role.get("name"),
@@ -161,6 +166,148 @@ class RoleModel:
             logging.exception(ex)
             raise Exception("Failed to add screens: " + str(ex))
 
+    @classmethod
+    def add_screens_by_role_id(cls, role_id, new_screens):
+        """Agregar screens a un rol usando su ID directamente"""
+        try:
+            if not isinstance(new_screens, list):
+                raise ValueError("Screens must be a list of strings")
+
+            from bson import ObjectId
+            if isinstance(role_id, str):
+                role_id = ObjectId(role_id)
+
+            # Buscar rol por ID
+            existing_role = __dbmanager__.collection.find_one({"_id": role_id})
+            if not existing_role:
+                return None  # No existe el rol
+
+            result = __dbmanager__.collection.update_one(
+                {"_id": role_id},
+                {
+                    "$addToSet": {
+                        "screens": {"$each": new_screens}
+                    }
+                }
+            )
+
+            if result.modified_count == 0:
+                # No se agregó nada, las screens ya estaban
+                return "DUPLICATE"
+
+            updated_role = __dbmanager__.collection.find_one({"_id": role_id})
+            return cls(
+                _id=updated_role.get("_id"),
+                name=updated_role.get("name"),
+                description=updated_role.get("description"),
+                permissions=updated_role.get("permissions"),
+                creation_date=updated_role.get("creation_date"),
+                mod_date=updated_role.get("mod_date"),
+                is_active=updated_role.get("is_active"),
+                default_role=updated_role.get("default_role"),
+                screens=updated_role.get("screens"),
+                admin_id=updated_role.get("admin_id"),
+                app_id=updated_role.get("app_id")
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to add screens: " + str(ex))
+
+    @classmethod
+    def remove_screen_by_role_id(cls, role_id, screen_path):
+        """Eliminar una screen específica de un rol usando su ID"""
+        try:
+            from bson import ObjectId
+            if isinstance(role_id, str):
+                role_id = ObjectId(role_id)
+
+            # Buscar rol por ID
+            existing_role = __dbmanager__.collection.find_one({"_id": role_id})
+            if not existing_role:
+                return None  # No existe el rol
+
+            # Verificar si la screen existe en el rol
+            current_screens = existing_role.get("screens", [])
+            if screen_path not in current_screens:
+                return "NOT_FOUND"  # La screen no existe en el rol
+
+            result = __dbmanager__.collection.update_one(
+                {"_id": role_id},
+                {
+                    "$pull": {
+                        "screens": screen_path
+                    }
+                }
+            )
+
+            if result.modified_count == 0:
+                # No se eliminó nada
+                return None
+
+            updated_role = __dbmanager__.collection.find_one({"_id": role_id})
+            return cls(
+                _id=updated_role.get("_id"),
+                name=updated_role.get("name"),
+                description=updated_role.get("description"),
+                permissions=updated_role.get("permissions"),
+                creation_date=updated_role.get("creation_date"),
+                mod_date=updated_role.get("mod_date"),
+                is_active=updated_role.get("is_active"),
+                default_role=updated_role.get("default_role"),
+                screens=updated_role.get("screens"),
+                admin_id=updated_role.get("admin_id"),
+                app_id=updated_role.get("app_id")
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to remove screen: " + str(ex))
+
+    @classmethod
+    def update_screens_by_role_id(cls, role_id, new_screens):
+        """Actualizar/reemplazar todas las screens de un rol usando su ID"""
+        try:
+            if not isinstance(new_screens, list):
+                raise ValueError("Screens must be a list of strings")
+
+            from bson import ObjectId
+            if isinstance(role_id, str):
+                role_id = ObjectId(role_id)
+
+            # Buscar rol por ID
+            existing_role = __dbmanager__.collection.find_one({"_id": role_id})
+            if not existing_role:
+                return None  # No existe el rol
+
+            result = __dbmanager__.collection.update_one(
+                {"_id": role_id},
+                {
+                    "$set": {
+                        "screens": new_screens
+                    }
+                }
+            )
+
+            if result.modified_count == 0:
+                # No se actualizó nada
+                return None
+
+            updated_role = __dbmanager__.collection.find_one({"_id": role_id})
+            return cls(
+                _id=updated_role.get("_id"),
+                name=updated_role.get("name"),
+                description=updated_role.get("description"),
+                permissions=updated_role.get("permissions"),
+                creation_date=updated_role.get("creation_date"),
+                mod_date=updated_role.get("mod_date"),
+                is_active=updated_role.get("is_active"),
+                default_role=updated_role.get("default_role"),
+                screens=updated_role.get("screens"),
+                admin_id=updated_role.get("admin_id"),
+                app_id=updated_role.get("app_id")
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to update screens: " + str(ex))
     
 
     @classmethod

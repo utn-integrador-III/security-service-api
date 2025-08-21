@@ -516,7 +516,226 @@ Content-Type: application/json
 
 **Nota de Seguridad:** Solo el `user_admin` que creó el rol puede eliminarlo. Esto previene que un admin elimine roles creados por otros admins.
 
-### **3.4 GET /rol/{id} - Obtener Rol por ID**
+### **3.4 POST /rol/screens - Asignar Screen a Rol**
+**Descripción:** Asigna una nueva screen a un rol específico. Solo el admin que creó el rol puede asignar screens.
+
+**URL:** `http://localhost:5002/rol/screens`
+
+**Método:** `POST`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body (JSON):**
+```json
+{
+  "role_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+  "app_id": "688cfd1ee07d666bf510137d",
+  "screen_path": "/dashboardAdmin"
+}
+```
+
+**Campos requeridos:**
+- `role_id`: string (ID del rol)
+- `app_id`: string (ID de la aplicación)
+- `screen_path`: string (ruta de la screen, ej: "/dashboardAdmin")
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "name": "Manager",
+    "description": "Rol de gerente",
+    "permissions": ["read", "write", "update"],
+    "screens": ["/dashboardAdmin"],
+    "admin_id": "68a50dee109b1accea9c1ab1",
+    "app_id": "688cfd1ee07d666bf510137d"
+  },
+  "message": "Screen assigned successfully",
+  "message_code": "SCREEN_ASSIGNED",
+  "status": 200
+}
+```
+
+**Respuesta si la screen ya existe (409):**
+```json
+{
+  "message": "Screen already exists in this role",
+  "message_code": "DUPLICATE_SCREEN",
+  "status": 409
+}
+```
+
+**Respuesta si el rol no pertenece a la app (400):**
+```json
+{
+  "message": "Role does not belong to the specified application",
+  "message_code": "ROLE_APP_MISMATCH",
+  "status": 400
+}
+```
+
+### **3.5 GET /rol/screens - Obtener Screens de un Rol**
+**Descripción:** Obtiene la lista de screens asignadas a un rol específico. Solo el admin que creó el rol puede consultar.
+
+**URL:** `http://localhost:5002/rol/screens`
+
+**Método:** `GET`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Query Parameters:**
+- `role_id`: string (ID del rol) - **Requerido**
+- `app_id`: string (ID de la aplicación) - **Requerido**
+
+**Ejemplo:**
+```
+GET http://localhost:5002/rol/screens?role_id=64f8a1b2c3d4e5f6a7b8c9d1&app_id=688cfd1ee07d666bf510137d
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "role_id": "64f8a1b2c3d4e5f6a7b8c9d1",
+    "app_id": "688cfd1ee07d666bf510137d",
+    "screens": ["/dashboardAdmin", "/users", "/reports"]
+  },
+  "message": "Screens retrieved successfully",
+  "message_code": "SCREENS_RETRIEVED",
+  "status": 200
+}
+```
+
+### **3.6 DELETE /rol/screens - Eliminar Screen de un Rol**
+**Descripción:** Elimina una screen específica de un rol. Solo el admin que creó el rol puede eliminar screens.
+
+**URL:** `http://localhost:5002/rol/screens`
+
+**Método:** `DELETE`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "role_id": "68a591a5ccab9299d7f4c9f4",
+  "app_id": "68a590ecec92b4ab68f630d6",
+  "screen_path": "/dashboard"
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "_id": "68a591a5ccab9299d7f4c9f4",
+    "name": "administrator (TEST)",
+    "description": "administrator - Editado en prueba",
+    "permissions": ["write", "delete", "update", "read"],
+    "creation_date": "2025-08-20 09:13:09.619000",
+    "mod_date": "2025-08-21 01:47:52.137000",
+    "is_active": true,
+    "default_role": false,
+    "screens": ["/users", "/reports"],
+    "admin_id": "68a590ebec92b4ab68f630d5",
+    "app_id": "68a590ecec92b4ab68f630d6"
+  },
+  "message": "Screen removed successfully",
+  "message_code": "SCREEN_REMOVED",
+  "status": 200
+}
+```
+
+### **3.7 PATCH /rol/screens - Actualizar Screens de un Rol**
+**Descripción:** Actualiza/reemplaza todas las screens de un rol. Solo el admin que creó el rol puede modificar screens.
+
+**URL:** `http://localhost:5002/rol/screens`
+
+**Método:** `PATCH`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Body:**
+```json
+{
+  "role_id": "68a591a5ccab9299d7f4c9f4",
+  "app_id": "68a590ecec92b4ab68f630d6",
+  "screens": ["/dashboard", "/users", "/reports", "/settings"]
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "_id": "68a591a5ccab9299d7f4c9f4",
+    "name": "administrator (TEST)",
+    "description": "administrator - Editado en prueba",
+    "permissions": ["write", "delete", "update", "read"],
+    "creation_date": "2025-08-20 09:13:09.619000",
+    "mod_date": "2025-08-21 01:47:52.137000",
+    "is_active": true,
+    "default_role": false,
+    "screens": ["/dashboard", "/users", "/reports", "/settings"],
+    "admin_id": "68a590ebec92b4ab68f630d5",
+    "app_id": "68a590ecec92b4ab68f630d6"
+  },
+  "message": "Screens updated successfully",
+  "message_code": "SCREENS_UPDATED",
+  "status": 200
+}
+```
+
+### **3.8 GET /rol/screens/role/{role_id} - Obtener Screens de un Rol Específico**
+**Descripción:** Obtiene la lista de screens asignadas a un rol específico por su ID. Solo el admin que creó el rol puede consultar.
+
+**URL:** `http://localhost:5002/rol/screens/role/{role_id}`
+
+**Método:** `GET`
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Path Parameters:**
+- `role_id`: string (ID del rol) - **Requerido**
+
+**Ejemplo:**
+```
+GET http://localhost:5002/rol/screens/role/68a591a5ccab9299d7f4c9f4
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "data": {
+    "role_id": "68a591a5ccab9299d7f4c9f4",
+    "screens": ["/dashboardAdmin", "/users", "/reports"]
+  },
+  "message": "Screens retrieved successfully",
+  "message_code": "SCREENS_RETRIEVED",
+  "status": 200
+}
+```
+
+### **3.9 GET /rol/{id} - Obtener Rol por ID**
 **Descripción:** Obtiene un rol específico por su ID. Solo el admin que creó el rol puede verlo.
 
 **URL:** `http://localhost:5002/rol/{id}`
@@ -550,7 +769,7 @@ Content-Type: application/json
 }
 ```
 
-### **3.5 PATCH /rol/{id} - Actualizar Rol**
+### **3.10 PATCH /rol/{id} - Actualizar Rol**
 **Descripción:** Actualiza un rol existente. Solo el admin que creó el rol puede modificarlo.
 
 **URL:** `http://localhost:5002/rol/{id}`
@@ -609,7 +828,7 @@ Content-Type: application/json
 - **404:** Role not found
 - **422:** Validation errors (nombre duplicado, campos inválidos)
 
-### **3.6 DELETE /rol/{id} - Eliminar Rol por ID**
+### **3.11 DELETE /rol/{id} - Eliminar Rol por ID**
 **Descripción:** Elimina un rol específico por su ID. Solo el admin que creó el rol puede eliminarlo.
 
 **URL:** `http://localhost:5002/rol/{id}`
