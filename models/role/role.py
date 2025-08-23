@@ -39,12 +39,37 @@ class RoleModel:
             raise Exception('Error finding active and default roles')
 
     @classmethod
+    def get_all(cls):
+        try:
+            result = []
+            items = __dbmanager__.get_all_data()            
+            if items:
+                for item in items:
+                    role = {
+                        "name":item.get("name"),
+                        "description":item.get("description"),
+                        "permissions":item.get("permissions"),
+                        "creation_date":item.get("creation_date"),
+                        "mod_date":item.get("mod_date"),
+                        "is_active":item.get("is_active"),
+                        "default_role":item.get("default_role"),
+                        "screens":item.get("screens"),
+                        "app":item.get("app")
+                    }
+                    result.append(role)
+                return result
+            
+            return None
+        except Exception as ex:
+            logging.exception(ex)
+            raise Exception("Failed to get rol by name: " + str(ex))
+        
+    @classmethod
     def get_by_name(cls, name):
         try:
             result = __dbmanager__.find_one({"name": name})
             if result:
                 return cls(
-                    _id=result.get("_id"),
                     name=result.get("name"),
                     description=result.get("description"),
                     permissions=result.get("permissions"),
