@@ -907,7 +907,7 @@ paths:
     post:
       tags: ["Roles"]
       summary: "Crear nuevo rol"
-      description: "Crea un nuevo rol. El admin_id y app_id se extraen automáticamente del token JWT."
+      description: "Crea un nuevo rol. El app_id es requerido para especificar a qué aplicación pertenece el rol."
       security:
         - BearerAuth: []
       parameters:
@@ -916,7 +916,7 @@ paths:
           required: true
           schema:
             type: object
-            required: [name, description, permissions]
+            required: [name, description, permissions, app_id]
             properties:
               name:
                 type: string
@@ -931,6 +931,14 @@ paths:
                 items: { type: string }
                 example: ["read", "write", "update"]
                 description: "Lista de permisos del rol"
+              app_id:
+                type: string
+                example: "507f1f77bcf86cd799439011"
+                description: "ID de la aplicación a la que pertenece el rol"
+              admin_id:
+                type: string
+                example: "507f1f77bcf86cd799439012"
+                description: "ID del admin que crea el rol (opcional)"
       responses:
         "201":
           description: "Role created successfully"
@@ -948,10 +956,13 @@ paths:
           description: "Authorization required"
           schema: { $ref: "#/definitions/ErrorResponse" }
         "409":
-          description: "Role already exists"
+          description: "Role already exists in this application"
           schema: { $ref: "#/definitions/ErrorResponse" }
         "422":
           description: "Validation errors"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "404":
+          description: "Application not found"
           schema: { $ref: "#/definitions/ErrorResponse" }
         "500":
           description: "Internal Server Error"
