@@ -81,6 +81,7 @@ class UserEnrollmentController(Resource):
                         ).to_response()
                     else:
                         return ServerResponse(
+                            data=update_data,
                             message="The user is already registered",
                             message_code=USER_ALREADY_REGISTERED,
                             status=StatusCode.CONFLICT
