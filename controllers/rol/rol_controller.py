@@ -97,6 +97,7 @@ class RolController(Resource):
             description = data.get('description', '')
             permissions = data.get('permissions', [])
             admin_id = data.get('admin_id')  # Campo opcional enviado por el frontend
+            app_id = data.get('app_id')  # Campo para especificar la aplicación específica
 
             # Validación del nombre
             if not name or len(name.strip()) < 2:
@@ -114,11 +115,35 @@ class RolController(Resource):
                     status=StatusCode.UNPROCESSABLE_ENTITY
                 ).to_response()
 
-            # Verificar si ya existe un rol con el mismo nombre
-            existing_role = RoleModel.get_by_name(name.strip())
-            if existing_role:
+            # Validación de app_id
+            if not app_id:
                 return ServerResponse(
-                    message="Role already exists",
+                    message="app_id is required to specify which application the role belongs to",
+                    message_code="APP_ID_REQUIRED",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Verificar que la aplicación existe
+            try:
+                app = AppModel.get(app_id)
+                if not app:
+                    return ServerResponse(
+                        message="Application not found",
+                        message_code="APP_NOT_FOUND",
+                        status=StatusCode.NOT_FOUND
+                    ).to_response()
+            except Exception as e:
+                return ServerResponse(
+                    message="Invalid app_id format",
+                    message_code="INVALID_APP_ID",
+                    status=StatusCode.UNPROCESSABLE_ENTITY
+                ).to_response()
+
+            # Verificar si ya existe un rol con el mismo nombre en la misma aplicación
+            existing_role = RoleModel.get_by_name(name.strip())
+            if existing_role and existing_role.app_id == app_id:
+                return ServerResponse(
+                    message="Role already exists in this application",
                     message_code="DUPLICATE_ROLE",
                     status=StatusCode.CONFLICT
                 ).to_response()
@@ -132,26 +157,13 @@ class RolController(Resource):
                 "mod_date": datetime.utcnow(),
                 "is_active": True,
                 "default_role": False,
-                "screens": []                   # Vacío por defecto
+                "screens": [],                   # Vacío por defecto
+                "app_id": ObjectId(app_id) if isinstance(app_id, str) else app_id
             }
 
             # Agregar campos opcionales si se proporcionan
             if admin_id:
                 role_data["admin_id"] = str(admin_id) if isinstance(admin_id, ObjectId) else admin_id
-
-            # Obtener app_id automáticamente si se proporciona admin_id
-            if admin_id:
-                try:
-                    # Buscar las apps asociadas al admin
-                    admin_apps = AppModel.get_by_admin_id(admin_id)
-                    if admin_apps and len(admin_apps) > 0:
-                        # Usar la primera app del admin
-                        role_data["app_id"] = ObjectId(admin_apps[0]["_id"])
-                        print(f"🔍 App ID asignado automáticamente: {role_data['app_id']}")
-                except Exception as e:
-                    print(f"⚠️ No se pudo obtener app_id automáticamente: {e}")
-                    print(f"🔍 Admin ID: {admin_id}")
-                    print(f"🔍 Apps encontradas: {admin_apps}")
 
             new_role = RoleModel.create(role_data)
 
