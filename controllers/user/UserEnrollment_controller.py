@@ -9,7 +9,7 @@ from models.role.role import RoleModel
 from utils.email_manager import send_email
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
-    CREATED, INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, NO_ACTIVE_ROLES_FOUND, DEFAULT_ROLE_NOT_FOUND, USER_CREATION_ERROR, UNEXPECTED_ERROR
+    CREATED, INVALID_EMAIL_DOMAIN, INVALID_NAME, INVALID_PASSWORD, USER_ALREADY_REGISTERED, NO_ACTIVE_ROLES_FOUND, DEFAULT_ROLE_NOT_FOUND, USER_CREATION_ERROR, USER_ALREDY_REGISTERED_GENERATING_NEW_CODE, UNEXPECTED_ERROR
 )
 
 class UserEnrollmentController(Resource):
@@ -60,7 +60,7 @@ class UserEnrollmentController(Resource):
                     if existing_user['status'] == 'Pending':
                         # Generar un nuevo código de verificación y actualizar en la BD
                         verification_code = random.randint(100000, 999999)
-                        expiration_code = datetime.utcnow() + timedelta(minutes=5)
+                        expiration_code = datetime.now() + timedelta(minutes=5)
                         
                         # Actualizar el usuario en la base de datos
                         update_data = {
@@ -71,12 +71,12 @@ class UserEnrollmentController(Resource):
                         UserModel.update_user(email, update_data)
 
                         # Enviar el nuevo código de verificación por correo
-                        send_email(email, verification_code)
+                       #send_email(email, verification_code)
 
                         return ServerResponse(
-                            data=None,
-                            message="It seems that your user is already register, sending another verification code, please check your email",
-                            message_code=CREATED,
+                            data=update_data,
+                            message="It seems that your user is already register, sending another verification code.",
+                            message_code=USER_ALREDY_REGISTERED_GENERATING_NEW_CODE,
                             status=StatusCode.CREATED,
                         ).to_response()
                     else:
@@ -109,7 +109,7 @@ class UserEnrollmentController(Resource):
 
                 # Generar código de verificación y código de expiración
                 verification_code = random.randint(100000, 999999)
-                expiration_code = datetime.utcnow() + timedelta(minutes=5)
+                expiration_code = datetime.now() + timedelta(minutes=5)
 
                 # Crear nuevo usuario
                 user_data = {
@@ -125,10 +125,10 @@ class UserEnrollmentController(Resource):
                 }
 
                 new_user = UserModel.create_user(user_data)
-                send_email(email, verification_code)
+                #send_email(email, verification_code)
 
                 return ServerResponse(
-                    data=None,
+                    data=user_data,
                     message="User created successfully",
                     message_code=CREATED,
                     status=StatusCode.CREATED,

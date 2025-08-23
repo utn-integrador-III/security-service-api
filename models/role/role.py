@@ -16,17 +16,21 @@ class RoleModel:
         self._id = _id
         
     def to_dict(self):
-        return {
-            "_id": self._id,
-            "name": self.name,
-            "description": self.description,
-            "permissions": self.permissions,
+        # return {
+        #     "_id": self._id,
+        #     "name": self.name,
+        #     "description": self.description,
+        #     "permissions": self.permissions,
+        #     "creation_date": self.creation_date,
+        #     "mod_date": self.mod_date,
+        #     "is_active": self.is_active,
+        #     "default_role": self.default_role,
+        #     "screens": self.screens,
+        #     "app": self.app
+        # }
+         return {
             "creation_date": self.creation_date,
-            "mod_date": self.mod_date,
-            "is_active": self.is_active,
-            "default_role": self.default_role,
-            "screens": self.screens,
-            "app": self.app
+            "mod_date": self.mod_date
         }
 
     @classmethod

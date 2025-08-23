@@ -3,7 +3,7 @@ from flask import request, make_response, jsonify
 from models.user.user import UserModel
 from utils.server_response import ServerResponse, StatusCode
 from utils.message_codes import (
-    USER_NOT_FOUND, INVALID_VERIFICATION_CODE, VERIFICATION_EXPIRED, VERIFICATION_SUCCESSFUL
+    USER_NOT_FOUND, INVALID_VERIFICATION_CODE, VERIFICATION_EXPIRED, VERIFICATION_SUCCESSFUL, USER_IS_ACTIVE
 )
 import logging
 from datetime import datetime
@@ -41,7 +41,7 @@ class UserVerificationController(Resource):
             ).to_response()
 
 
-            if user['expiration_code'] < datetime.utcnow():
+            if user['expiration_code'] < datetime.now():
                 return ServerResponse({
                     "message": "Verification code expired",
                     "message_code": VERIFICATION_EXPIRED,
@@ -51,7 +51,8 @@ class UserVerificationController(Resource):
             if user['status'].lower() != 'pending':
              return ServerResponse({
               "message": "User is not in a pending state",
-              "status": StatusCode.BAD_REQUEST
+              "message_code": USER_IS_ACTIVE,
+              "status": StatusCode.CONFLICT
             }).to_response()
 
             
