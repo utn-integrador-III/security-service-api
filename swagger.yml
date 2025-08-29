@@ -1,1006 +1,1077 @@
-#This is the header of the file, whose main goal is to display important information
-#about the .yml file.
 swagger: "2.0"
 info:
   description: "Security Service API's Documentation"
-  version: "1.0.0"
+  version: "2.0.0"
   title: "Swagger Security Service API"
   termsOfService: "Terms"
   contact:
     email: "ebarahona@utn.ac.cr"
 host: "localhost:5002"
-basePath: "/booking_api"
-#The tags are the identifiers for the paths that are created, this will assign a path with a unique tag,
-#meaning that, an specific end-point belongs to a tag or identifier
-tags:
-  - name: "Auth"
-    description: "Auth paths"
-  - name: "Users"
-    description: "All users's Endpoints"
-  - name: "Roles"
-    description: "All Roles endpoints"
-#the schemes will define the protocol that are been used by the end-points inside the API
+basePath: "/"
 schemes:
-  - "https"
   - "http"
-#The definitions will display the information that the end-points will return, all along with the
-#corresponding messages of the errors.
+  - "https"
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: "Usa: Bearer <token> (en /auth/refresh y /auth/verify_auth tu backend acepta el token **sin** el prefijo)."
+
+tags:
+  - name: "Health"
+    description: "Service health check"
+  - name: "Auth"
+    description: "Authentication & token utilities"
+  - name: "Users"
+    description: "User lifecycle and access"
+  - name: "Roles"
+    description: "Role lookup & management"
+  - name: "Screens"
+    description: "Screens per role"
+  - name: "Admin"
+    description: "Administrators management"
+  - name: "Apps"
+    description: "Applications registry"
+
 definitions:
-  role_idResponse:
+  # ---------- Common ----------
+  ServerResponse:
     type: object
     properties:
-      roles:
-        type: string
-        example: "member"
-  Response:
-    type: object
-    properties:
-      data:
-        type: array
-        items:
-          $ref: "#/definitions/RoleGet"
+      data: {}
       message:
         type: string
-        example: "Successfully requested"
       message_code:
         type: string
-        example: "OK_MSG"
+
   ErrorResponse:
     type: object
     properties:
-      data:
-        type: string
-        example: null
+      data: {}
       message:
         type: string
       message_code:
         type: string
+
   InvalidIdErrorResponse:
     type: object
     properties:
-      data:
-        type: string
-        example: null
+      data: {}
       message:
         type: string
         example: "Invalid Id"
       message_code:
         type: string
         example: "INVALID_ID"
+
   InternalErrorResponse:
     type: object
     properties:
-      data:
-        type: string
-        example: null
+      data: {}
       message:
         type: string
         example: "Internal server error"
       message_code:
         type: string
         example: "INTERNAL_SERVER_ERROR_MSG"
-  AuthGet:
+
+  # ---------- Auth ----------
+  AuthLoginRequest:
     type: object
+    required: [email, password, app]
     properties:
       email:
         type: string
-        example: "semataoe@est.utn.ac.cr"
-      name:
-        type: string
-        example: "Juan Vasquez"
-      status:
-        type: string
-        example: "Active"
-      role:
-        type: string
-        example: "Admin"
-      token:
-        type: string
-        example: "394FDJ347SL34"
-  AuthPost:
-    type: "object"
-    required:
-      - email
-      - password
-    properties:
-      email:
-        type: "string"
-        example: "alrodriguezja@est.utn.ac.cr"
-      password:
-        type: "string"
-        example: "Aleja123#"
-  AuthRefresh:
-    type: "object"
-    required:
-      - token
-    properties:
-      token:
-        type: "string"
-        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7Lrr18H9LAk"
-  AuthTokenGet:
-      type: "object"
-      properties:
-        token:
-          type: "string"
-          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7L_IJO3dhj"
-  LogoutResponse:
-    type: object
-    required:
-      - "email"
-    properties:
-      message:
-        type: string
-        example: "User has been logged out"
-      message_code:
-        type: string
-        example: "USER_LOGGED_OUT"
-  UserGet:
-    type: object
-    properties:
-      _id:
-        type: string
-        example: "YRH347&%HF"
-      name:
-        type: string
-        example: "John Allen Valerin"
+        example: "user@est.utn.ac.cr"
       password:
         type: string
-        example: "ueI#kdKSLjIEKSI##"
+        example: "Secret123*"
+      app:
+        type: string
+        example: "vehiculos"
+
+  AdminAuthLoginRequest:
+    type: object
+    required: [email, password]
+    properties:
       email:
         type: string
-        example: "jhonallen@est.utn.ac.cr"
-      status:
-        type: string
-        example: Pending
-      verification_code:
-        type: string
-        example: "373483"
-  UserGetById:
-    type: object
-    properties:
-      UserID:
-        type: integer
-        example: 1
-      name:
-        type: string
-        example: "John Allen Valerin"
-  UserPost:
-    type: object
-    required:
-      - "name"
-      - "email"
-      - "password"
-      - "role"
-    properties:
-      name:
-        type: string
-        example: "John Allen Valerin"
+        example: "admin@utn.ac.cr"
       password:
         type: string
-        example: "484UTN"
+        example: "Secret123*"
+
+  Role:
+    type: object
+    properties:
+      name: { type: string, example: "Admin" }
+      permissions:
+        type: array
+        items: { type: string, example: "read" }
+      is_active: { type: boolean, example: true }
+      screens:
+        type: array
+        items: { type: string }
+
+  AuthLoginResponse:
+    type: object
+    properties:
+      data:
+        type: object
+        properties:
+          email: { type: string }
+          name: { type: string }
+          status: { type: string, example: "active" }
+          role:
+            $ref: "#/definitions/Role"
+          token: { type: string, example: "eyJhbGciOi..." }
+          app: { type: string, example: "vehiculos" }
+          app_id: { type: string, example: "b0b8e6b2-7f3a-4a0f-8e18-c2b5f3f5f1a1" }
+          apps:
+            type: array
+            items: { type: object }
+      message: { type: string, example: "User has been authenticated" }
+      message_code: { type: string, example: "USER_AUTHENTICATED" }
+
+  JwtUserData:
+    type: object
+    properties:
+      identity: { type: string, example: "66df7a..." }
+      rolName: { type: string, example: "Admin" }
+      email: { type: string, example: "user@est.utn.ac.cr" }
+      name: { type: string, example: "Jane Doe" }
+      status: { type: string, example: "active" }
+
+  # ---------- Users ----------
+  AppMembership:
+    type: object
+    properties:
+      app: { type: string, example: "66df7a..." }
+      role: { type: string, example: "66df79..." }
+      token: { type: string }
+      code: { type: string, example: "138546" }
+      code_expiration: { type: string, example: "2025/06/28 16:35:00" }  # nombre actual en código
+      status: { type: string, example: "pending" }
+      is_session_active: { type: boolean, example: false }
+
+  User:
+    type: object
+    properties:
+      id: { type: string, example: "66df7a..." }
+      name: { type: string }
+      email: { type: string }
+      password: { type: string }
+      apps:
+        type: array
+        items: { $ref: "#/definitions/AppMembership" }
+
+  UserEnrollmentRequest:
+    type: object
+    required: [name, email, password, apps]
+    properties:
+      name:
+        type: string
+        example: "Bairon Vega"
       email:
         type: string
-        example: "jhonallen@est.utn.ac.cr"
+        example: "bayronvm.2014@gmail.com"
+      password:
+        type: string
+        example: "Utn12345*"
+      apps:
+        type: array
+        minItems: 1
+        items:
+          type: object
+          required: [role, app]
+          properties:
+            role:
+              type: string
+              description: "Mongo ObjectId del rol (24 hex)"
+              pattern: "^[a-fA-F0-9]{24}$"
+              example: "685f50e5f32399f6545cad43"
+            app:
+              type: string
+              description: "Mongo ObjectId de la app (24 hex)"
+              pattern: "^[a-fA-F0-9]{24}$"
+              example: "688cfde1ee070666bf510137"
+
+  UserVerificationRequest:
+    type: object
+    required: [user_email, verification_code]
+    properties:
+      user_email: { type: string, example: "john@est.utn.ac.cr" }
+      verification_code: { type: number, example: 896876 }
+
+  UserPasswordPut:
+    type: object
+    required: [user_email, old_password, new_password, confirm_password]
+    properties:
+      user_email: { type: string, example: "john@est.utn.ac.cr" }
+      old_password: { type: string, example: "oldPass123" }
+      new_password: { type: string, example: "NewPass123" }
+      confirm_password: { type: string, example: "NewPass123" }
+
+  UserPasswordPost:
+    type: object
+    required: [email]
+    properties:
+      email: { type: string, example: "john@est.utn.ac.cr" }
+
+  # ---------- Roles ----------
   RoleGet:
     type: object
     properties:
-      _Id:
-        type: integer
-        example: 1
-      name:
-        type: string
-        example: "Admin"
-      description:
-        type: string
-        example: "User Admin"
+      _id: { type: string, example: "66df7a..." }
+      name: { type: string, example: "Admin" }
+      description: { type: string, example: "User Admin" }
       permissions:
         type: array
-        items:
-          type: string
-        example:
-          - "read"
-          - "write"
-          - "delete"
-          - "update"
-      creation_date:
-        type: object
-        example:
-          $date: "2024-06-08T00:00:00.000Z"
-      mod_date:
-        type: object
-        example:
-          $date: "2024-06-08T00:00:00.000Z"
-      is_active:
-        type: boolean
-        example: True
-      default_role:
-        type: boolean
-        example: True
+        items: { type: string }
+      creation_date: { type: string }
+      mod_date: { type: string }
+      is_active: { type: boolean, example: true }
+      default_role: { type: boolean, example: true }
       screens:
         type: array
-        items:
-          type: string
-        example:
-          - "LostObject/Report"
-          - "Lab/BookingComputer"
-          - "Lab/Issue"
-  RolePost:
+        items: { type: string }
+      admin_id: { type: string, example: "68a50dee109b1accea9c1ab1" }
+      app_id: { type: string, example: "688cfd1ee07d666bf510137d" }
+
+  # ---------- Admin ----------
+  AdminPost:
     type: object
-    required:
-      - "_Id"
+    required: [admin_email, password]
     properties:
-      _Id:
-        type: integer
-        example: 1
-      name:
+      admin_email: { type: string, example: "admin@utn.ac.cr" }
+      password: { type: string, example: "Secret123*" }
+      status: { type: string, example: "active" }
+
+  AdminGet:
+    type: object
+    properties:
+      _id: { type: string, example: "66df7a..." }
+      admin_email: { type: string, example: "admin@utn.ac.cr" }
+      status: { type: string, example: "active" }
+      creation_date: { type: string }
+
+  # ---------- Apps ----------
+  AppPost:
+    type: object
+    required: [name, redirect_url]
+    properties:
+      name: { type: string, example: "vehiculos" }
+      redirect_url: { type: string, example: "http://localhost:3000/callback" }
+      status: { type: string, example: "active" }
+      admin_id: { type: string, example: "66df7a..." }
+
+  AppGet:
+    type: object
+    properties:
+      _id: { type: string, example: "66df7a..." }
+      name: { type: string }
+      redirect_url: { type: string }
+      status: { type: string }
+      admin_id:
         type: string
-        example: "Admin"
-      permissions:
-        type: array
-        items:
-          type: string
-        example:
-          - "read"
-          - "write"
-          - "delete"
-      creation_date:
-        type: object
-        example:
-          $date: "2024-06-08T00:00:00.000Z"
-      mod_date:
-        type: object
-        example:
-          $date: "2024-06-08T00:00:00.000Z"
-      is_active:
-        type: boolean
-        example: True
-      default_role:
-        type: boolean
-        example: True
-      screens:
-        type: array
-        items:
-          type: string
-        example:
-          - "LostObject/Report"
-          - "Lab/BookingComputer"
-          - "Lab/Issue"
-#The paths are the ones with all the information of the CRUD methods of the end-points
+        x-nullable: true
+      creation_date: { type: string }
+
 paths:
+  # ---------- Health ----------
+  /health:
+    get:
+      tags: ["Health"]
+      summary: "Health check"
+      description: "Verifica conexión con DB."
+      responses:
+        "200":
+          description: "Connection OK"
+          schema:
+            $ref: "#/definitions/ServerResponse"
+        "404":
+          description: "Connection not possible"
+          schema:
+            $ref: "#/definitions/ServerResponse"
+
+  # ---------- Auth ----------
+  /auth/admin/login:
+    post:
+      tags: ["Auth"]
+      summary: "Admin login"
+      description: "Autentica un administrador."
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/AdminAuthLoginRequest" }
+      responses:
+        "200":
+          description: "OK"
+          schema: { $ref: "#/definitions/AuthLoginResponse" }
+        "400":
+          description: "Invalid email domain"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Invalid email or password"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "403":
+          description: "Admin is not active"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+
   /auth/login:
     post:
-      tags:
-        - "Auth"
+      tags: ["Auth"]
+      summary: "Login de usuario"
+      description: "Autentica con email, password y **app** obligatoria."
       parameters:
-        - in: "body"
-          name: "body"
-          description: "Post Method to authenticate user with email and password"
+        - in: body
+          name: body
           required: true
-          schema:
-            $ref: "#/definitions/AuthPost"
-
-      summary: "Generate the authentication post method"
-      description: "Create Auth"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+          schema: { $ref: "#/definitions/AuthLoginRequest" }
       responses:
-       "200":
-          description: "Get user information once logged in"
-          schema:
-            type: "object"
-            properties:
-              data:
-                type: "object"
-                properties:
-                  email:
-                    type: "string"
-                    example: "alrodriguezja@est.utn.ac.cr"
-                  name:
-                    type: "string"
-                    example: "Alejandro Rodriguez"
-                  status:
-                    type: "string"
-                    example: "Active"
-                  role:
-                    type: "object"
-                    properties:
-                      name:
-                        type: "string"
-                        example: "BookinComputer"
-                      permissions:
-                        type: "array"
-                        items:
-                          type: "string"
-                        example: ["read", "write", "update", "delete"]
-                      is_active:
-                        type: "boolean"
-                        example: true
-                      screens:
-                        type: "array"
-                        items:
-                          type: "string"
-                        example: ["Lab/BookComputer", "Lab/Issue"]
-                  token:
-                    type: "string"
-                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjE3OTgxMzYsImlhdCI6MTcyMTc5NjMzNiwic3ViIjoiQm9va2luQ29tcHV0ZXIifQ.HdbBFSNu-_SckPBOHJk0IZ8pfgmrg32d7Lrr18H9LAk"
-              message:
-                type: "string"
-                example: "User has been authenticated"
-              message_code:
-                type: "string"
-                example: "USER_AUTHENTICATED"
-       "400":
-          description: "Unprocessable Entity - Validation Errors"
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                enum:
-                  - "Invalid email domain"
-                  - "Invalid email or password"
-                  - "User is not active"
-                example: "Invalid email domain"
-              message_code:
-                type: string
-                enum:
-                  - "INVALID_EMAIL_DOMAIN"
-                  - "INVALID_CREDENTIALS"
-                  - "USER_NOT_ACTIVE"
-                example: "INVALID_EMAIL_DOMAIN"
-       "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
+        "200":
+          description: "OK"
+          schema: { $ref: "#/definitions/AuthLoginResponse" }
+        "400":
+          description: "Invalid email domain"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Invalid email or password"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "403":
+          description: "User is not active / app access denied"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "500":
+          description: "Failed to update user token"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+
   /auth/refresh:
     post:
-      tags:
-        - "Auth"
+      tags: ["Auth"]
+      summary: "Refresh token"
+      description: "Lee el token desde el header Authorization y emite uno nuevo (con período de gracia). **No exige prefijo Bearer**."
       parameters:
-        - in: "body"
-          name: "body"
-          description: "Post Method to authenticate user with email and password"
+        - in: header
+          name: Authorization
+          type: string
           required: true
-          schema:
-            $ref: "#/definitions/AuthRefresh"
-      summary: "Generate the authentication post method"
-      description: "Refresh Auth Token"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+          description: "Token JWT actual (sin 'Bearer ' si así lo usas)."
       responses:
         "200":
-            description: "Get a New token"
-            schema:
-              allOf:
-                - $ref: "#/definitions/Response"
-                - properties:
-                    data:
-                      $ref: "#/definitions/AuthTokenGet"
-                    message:
-                      example: "Token successfully Refreshed"
-                    message_code:
-                      example: "TOKEN_SUCCESSFULLY_REFRESHED"
-        "401":
-            description: "Unauthorized"
-            schema:
-              allOf:
-                - $ref: "#/definitions/ErrorResponse"
-                - properties:
-                    message:
-                      example: "Token has expired or was invalid"
-                    message_code:
-                      example: "UNAUTHORIZED"
-        "500":
-          description: "Internal Server Error"
+          description: "New token"
           schema:
-            $ref: "#/definitions/InternalErrorResponse"
-  /user/enrollment:
-    post:
-      tags:
-        - "Users"
-      summary: "Create a User"
-      description: "Create a user account with the provided details."
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "User object that needs to be created"
-          required: true
-          schema:
-            $ref: '#/definitions/UserPost'
-      responses:
-        "201":
-          description: "User successfully created"
-          schema:
-            allOf:
-              - properties:
-                  message:
-                    example: "User created successfully"
-                  message_code:
-                    example: "USER_SUCCESSFULLY_CREATED"
-        "400":
-          description: "Bad Request - Invalid request format or missing fields"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "The request format is invalid or required fields are missing"
-                  message_code:
-                    example: "BAD_REQUEST"
-        "409":
-          description: "Conflict - User already exists"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "The user is already registered"
-                  message_code:
-                    example: "USER_ALREADY_REGISTERED"
-        "422":
-          description: "Unprocessable Entity - Validation Errors"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "The provided email is not valid"
-                  message_code:
-                    example: "INVALID_EMAIL_DOMAIN"
             type: object
             properties:
-              message:
-                type: string
-                enum:
-                  - "The provided email is not valid"
-                  - "The entered domain does not meet the established standards"
-                  - "The name does not meet the established standards"
-                  - "The password does not meet the established standards"
-                  - "No active roles found"
-                  - "Default role not found"
-                  - "The provided role is not valid: role_name"
-                example: "The provided email is not valid"
-              message_code:
-                type: string
-                enum:
-                  - "INVALID_EMAIL_DOMAIN"
-                  - "INVALID_NAME"
-                  - "INVALID_PASSWORD"
-                  - "NO_ACTIVE_ROLES_FOUND"
-                  - "DEFAULT_ROLE_NOT_FOUND"
-                  - "INVALID_ROLE"
-                example: "INVALID_EMAIL_DOMAIN"
-        "500":
-          description: "Internal Server Error"
+              data:
+                type: object
+                properties:
+                  token: { type: string, example: "eyJhbGciOi..." }
+              message: { type: string, example: "Token Refreshed" }
+              message_code: { type: string, example: "OK" }
+        "400":
+          description: "Token not added"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Token Expired"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "404":
+          description: "Token Not Valid"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+
+  /auth/verify_auth:
+    post:
+      tags: ["Auth"]
+      summary: "Verifica JWT y devuelve payload"
+      description: "Requiere Authorization y un permiso en el body (por ahora **no** se cruza con roles; solo valida el token y retorna el payload)."
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: "Token en Authorization (sin prefijo también funciona)."
+        - in: body
+          name: body
+          required: true
           schema:
-            $ref: "#/definitions/InternalErrorResponse"
+            type: object
+            required: [permission]
+            properties:
+              permission: { type: string, example: "orders:read" }
+      responses:
+        "200":
+          description: "Usuario válido"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/JwtUserData" }
+              message: { type: string, example: "User is valid" }
+              message_code: { type: string, example: "USER_AUTHENTICATED" }
+        "400":
+          description: "User Not valid"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+        "401":
+          description: "Authorization token is required"
+          schema: { $ref: "#/definitions/ErrorResponse" }
+
   /auth/logout:
     put:
-      tags:
-        - "Auth"
-      summary: "Log out a user"
-      description: "Logs out a user by email"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+      tags: ["Auth"]
+      summary: "Logout por email"
+      description: "Cierra sesión en todas las apps del usuario."
       parameters:
-        - in: "body"
-          name: "body"
-          description: "User email for logout"
-          required: true
-          schema:
-            type: "object"
-            properties:
-              email:
-                type: "string"
-                format: "email"
-            example:
-              email: "user@example.com"
-      responses:
-        "200":
-          description: "User successfully logged out"
-          schema:
-            $ref: "#/definitions/LogoutResponse"
-        "400":
-          description: "Invalid credentials or user does not exist"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "The user does not exist"
-                  message_code:
-                    example: "INVALID_CREDENTIALS"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-  /user/password:
-    put:
-      tags:
-        - "Users"
-      summary: "Update user password"
-      description: "Update the password for an existing user"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "User password update object"
+        - in: body
+          name: body
           required: true
           schema:
             type: object
+            required: [email]
             properties:
-              user_email:
-                type: string
-                format: email
-              old_password:
-                type: string
-                format: password
-              new_password:
-                type: string
-                format: password
-              confirm_password:
-                type: string
-                format: password
-            example:
-              user_email: "chcamonael@est.utn.ac.cr"
-              old_password: "oldpassword123"
-              new_password: "newpassword123"
-              confirm_password: "newpassword123"
+              email: { type: string, example: "user@example.com" }
       responses:
         "200":
-          description: "Password updated successfully"
-          schema:
-            allOf:
-              - properties:
-                  message:
-                    example: "Password updated successfully"
-                  message_code:
-                    example: "PASSWORD_UPDATED_SUCCESSFULLY"
+          description: "User has been logged out"
+          schema: { $ref: "#/definitions/ServerResponse" }
         "400":
-          description: "Bad Request"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "All fields are required: user_email, old_password, new_password, confirm_password"
-                  message_code:
-                    example: "MISSING_REQUIRED_FIELDS"
-        "401":
-          description: "Unauthorized"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Old password is incorrect"
-                  message_code:
-                    example: "INVALID_OLD_PASSWORD"
-        "403":
-          description: "Forbidden"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User is not active"
-                  message_code:
-                    example: "USER_NOT_ACTIVE"
-        "404":
-          description: "User not found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User not found"
-                  message_code:
-                    example: "USER_NOT_FOUND"
+          description: "Invalid email / user not found"
+          schema: { $ref: "#/definitions/ErrorResponse" }
         "500":
           description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
+          schema: { $ref: "#/definitions/InternalErrorResponse" }
+
+  # ---------- Screens ----------
+  /rol/screens:
     post:
-      tags:
-        - "Users"
-      summary: "Reset user password"
-      description: "Starts the password reset process for a user and lock their account"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+      tags: ["Screens"]
+      summary: "Asignar screen a un rol"
+      description: "Solo el admin que creó el rol puede asignar screens."
+      security:
+        - BearerAuth: []
       parameters:
-        - in: "body"
-          name: "body"
-          description: "User email to reset password is required"
-          required: true
-          schema:
-            type: "object"
-            properties:
-              email:
-                type: "string"
-                format: "email"
-            example:
-              email: "semataoe@est.utn.ac.cr"
-      responses:
-        "200":
-          description: "User password reset process started succesfully"
-          schema:
-            type: "object"
-            properties:
-              message:
-                type: "string"
-                example: "Password reset initiated and user blocked"
-              message_code:
-                type: "string"
-                example: "PASSWORD_RESET_INITIATED"
-        "400":
-          description: "Bad Request"
-          schema:
-            $ref: "#/definitions/ErrorResponse"
-        "404":
-          description: "User not found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User not found"
-                  message_code:
-                    example: "USER_NOT_FOUND"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-  /user/verification:
-    put:
-      tags:
-        - "Users"
-      summary: "Verify user account"
-      description: "Verify a user's account using a verification code."
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: "body"
-          name: "body"
-          description: "User verification object"
+        - in: body
+          name: body
           required: true
           schema:
             type: object
+            required: [role_id, app_id, screen_path]
             properties:
-              user_email:
-                type: string
-                format: email
-              verification_code:
-                type: number
-            example:
-              user_email: "chcamonael@est.utn.ac.cr"
-              verification_code: 896876
+              role_id: { type: string, example: "64f8a1b2c3d4e5f6a7b8c9d0" }
+              app_id: { type: string, example: "68a590ecec92b4ab68f630d6" }
+              screen_path: { type: string, example: "/dashboardAdmin" }
       responses:
         "200":
-          description: "User account verified successfully"
+          description: "Screen assigned successfully"
           schema:
-            allOf:
-              - properties:
-                  message:
-                    example: "User account verified successfully"
-                  message_code:
-                    example: "USER_VERIFIED_SUCCESSFULLY"
-        "400":
-          description: "Bad Request"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "All fields are required: user_email, verification_code"
-                  message_code:
-                    example: "MISSING_REQUIRED_FIELDS"
-        "401":
-          description: "Unauthorized"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Verification code is incorrect"
-                  message_code:
-                    example: "INVALID_VERIFICATION_CODE"
-        "403":
-          description: "Forbidden"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User is not active"
-                  message_code:
-                    example: "USER_NOT_ACTIVE"
-        "404":
-          description: "User not found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "User not found"
-                  message_code:
-                    example: "USER_NOT_FOUND"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-  /role:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Screen assigned successfully" }
+              message_code: { type: string, example: "SCREEN_ASSIGNED" }
+              status: { type: integer, example: 200 }
+        "400": { description: "Role does not belong to the specified application", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to modify this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "409": { description: "Screen already exists in this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Validation errors", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
     get:
-      tags:
-        - "Roles"
-      summary: "Get list of all Roles"
-      description: "Get list of all Roles"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+      tags: ["Screens"]
+      summary: "Obtener screens de un rol"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: role_id
+          type: string
+          required: true
+        - in: query
+          name: app_id
+          type: string
+          required: true
       responses:
         "200":
-          description: "A list of roles"
+          description: "Screens retrieved successfully"
           schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-        "400":
-          description: "Bad Request"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
-                  message:
-                    example: "Server Couldn't Process the Request"
-                  message_code:
-                    example: "BAD_REQUEST"
-        "404":
-          description: "Role Not Found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Role not found"
-                  message_code:
-                    example: "NOT_FOUND"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-    post:
-      tags:
-        - "Roles"
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  role_id: { type: string }
+                  app_id: { type: string }
+                  screens:
+                    type: array
+                    items: { type: string }
+                    example: ["/dashboardAdmin", "/users", "/reports"]
+              message: { type: string, example: "Screens retrieved successfully" }
+              message_code: { type: string, example: "SCREENS_RETRIEVED" }
+              status: { type: integer, example: 200 }
+        "400": { description: "Role does not belong to the specified application", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to view this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Validation errors", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+    delete:
+      tags: ["Screens"]
+      summary: "Eliminar screen de un rol"
+      security:
+        - BearerAuth: []
       parameters:
-        - name: Authorization
-          in: header
-          description: An authorization header
-          required: true
-          type: string
-        - in: "body"
-          name: "body"
-          description: "Role object that needs to be added"
+        - in: body
+          name: body
           required: true
           schema:
-            $ref: "#/definitions/RolePost"
-      summary: "Create a Role"
-      description: "Create a Role"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+            type: object
+            required: ["role_id", "app_id", "screen_path"]
+            properties:
+              role_id: { type: string, example: "68a591a5ccab9299d7f4c9f4" }
+              app_id: { type: string, example: "68a590ecec92b4ab68f630d6" }
+              screen_path: { type: string, example: "/dashboard" }
+      responses:
+        "200":
+          description: "Screen removed successfully"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/Role" }
+              message: { type: string, example: "Screen removed successfully" }
+              message_code: { type: string, example: "SCREEN_REMOVED" }
+              status: { type: integer, example: 200 }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to modify this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found or screen not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Invalid request data", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /rol/screens/role/{role_id}:
+    get:
+      tags: ["Screens"]
+      summary: "Obtener screens de un rol específico"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: role_id
+          type: string
+          required: true
+      responses:
+        "200":
+          description: "Screens retrieved successfully"
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  role_id: { type: string }
+                  screens:
+                    type: array
+                    items: { type: string }
+                    example: ["/dashboardAdmin", "/users", "/reports"]
+              message: { type: string, example: "Screens retrieved successfully" }
+              message_code: { type: string, example: "SCREENS_RETRIEVED" }
+              status: { type: integer, example: 200 }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to view this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  # ---------- Users ----------
+  /user/enrollment:
+    post:
+      tags: ["Users"]
+      summary: "Crear usuario y asignaciones"
+      description: "Crea usuario y lo matricula en una o más apps. 'apps[].role' y 'apps[].app' deben ser ObjectId"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/UserEnrollmentRequest" }
       responses:
         "201":
-          description: "Role successfully created"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/RoleGet"
-                  message:
-                    example: "Role successfully created"
-                  message_code:
-                    example: "ROLE_SUCCESSFULLY_CREATED"
-        "400":
-          description: "Bad Request"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  data:
-                    $ref: "#/definitions/UserGet"
-                  message:
-                    example: "Server Couldn't Process the Request"
-                  message_code:
-                    example: "BAD_REQUEST"
-        "409":
-          description: "Role already exists"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Role aready exist"
-                  message_code:
-                    example: "ROLE_ALREADY_EXIST"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-    put:
-      tags:
-        - "Roles"
-      parameters:
-        - name: Authorization
-          in: header
-          description: An authorization header
-          required: true
-          type: string
-        - in: "body"
-          name: "body"
-          description: "Role object that needs to be updated"
-          required: true
-          schema:
-            $ref: "#/definitions/RolePost"
-      summary: "Update an Role"
-      description: "Update an Role"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      responses:
+          description: "User created and codes sent"
+          schema: { $ref: "#/definitions/ServerResponse" }
         "200":
-          description: "An updated role"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/RoleGet"
-                  message:
-                    example: "Role successfully updated"
-                  message_code:
-                    example: "ROLE_SUCCESSFULLY_UPDATED"
-        "404":
-          description: "No Role found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Role not found"
-                  message_code:
-                    example: "NOT_FOUND"        
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-        "422":
-          description: "Invalid Id"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Invalid Id"
-                  message_code:
-                    example: "INVALID_ID"
-  /role/{_Id}:
+          description: "User updated with new role(s)/app(s)"
+          schema: { $ref: "#/definitions/ServerResponse" }
+        "400": { description: "Invalid request / missing fields", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "409": { description: "Duplicate role/app for this user", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Validation errors (email, name, password, role)", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /user:
     get:
-      tags:
-        - "Roles"
-      summary: "Find role by ID"
-      description: "Returns a single Report"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
+      tags: ["Users"]
+      summary: "Listar usuarios"
+      description: "Si se envía `app_id` (ObjectId o nombre), filtra por usuarios que tengan esa app asignada."
       parameters:
-        - name: "_Id"
-          in: "path"
-          description: "_Id of report to return"
-          required: true
-          type: "integer"
-          format: "integer"
-      responses:
-        "200":
-          description: "Get single role successfully"
-          schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/RoleGet"
-        "404":
-          description: "Role not found"
-          schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Role not found"
-                  message_code:
-                    example: "ROLE_ITEM_NOT_FOUND"
-        "422":
-          description: "Invalid Object Id"
-          schema:
-            $ref: "#/definitions/InvalidIdErrorResponse"
-        "500":
-          description: "Internal Server Error"
-          schema:
-            $ref: "#/definitions/InternalErrorResponse"
-    delete:
-      tags:
-        - "Roles"
-      summary: "Delete Role by ID"
-      description: "Returns a deleted role"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - name: Authorization
-          in: header
-          description: An authorization header
-          required: true
+        - in: query
+          name: app_id
           type: string
-        - name: "_Id"
-          in: "path"
-          description: "ID of role to delete"
-          required: true
-          type: "integer"
-          format: "integer"
+          required: false
+          description: "Id o nombre de la app"
       responses:
         "200":
-          description: "Role successfully deleted"
+          description: "OK"
           schema:
-            allOf:
-              - $ref: "#/definitions/Response"
-              - properties:
-                  data:
-                    $ref: "#/definitions/RoleGet"
-                  message:
-                    example: "Role successfully deleted"
-                  message_code:
-                    example: "ROLE_SUCCESSFULLY_DELETED"
-        "404":
-          description: "Country not found"
+            type: object
+            properties:
+              data:
+                type: array
+                items: { $ref: "#/definitions/User" }
+              message: { type: string }
+              message_code: { type: string }
+        "404": { description: "Application not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /user/{id}:
+    parameters:
+      - in: path
+        name: id
+        type: string
+        required: true
+    get:
+      tags: ["Users"]
+      summary: "Obtener usuario por id"
+      responses:
+        "200": { description: "OK", schema: { $ref: "#/definitions/ServerResponse" } }
+        "404": { description: "User not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    patch:
+      tags: ["Users"]
+      summary: "Actualizar campos de una asignación de app del usuario"
+      description: "Requiere `app_id` en el body. Campos soportados: `status`, `role` (id o nombre), `is_session_active`."
+      parameters:
+        - in: body
+          name: body
+          required: true
           schema:
-            allOf:
-              - $ref: "#/definitions/ErrorResponse"
-              - properties:
-                  message:
-                    example: "Role not found"
-                  message_code:
-                    example: "ROLE_ITEM_NOT_FOUND"
-        "422":
-          description: "Invalid Object Id"
+            type: object
+            required: [app_id]
+            properties:
+              app_id: { type: string, example: "vehiculos" }
+              status: { type: string, example: "active" }
+              role: { type: string, example: "admin" }
+              is_session_active: { type: boolean, example: true }
+      responses:
+        "200": { description: "User app updated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "400": { description: "Missing app_id / no changes provided", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "User or app assignment not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    delete:
+      tags: ["Users"]
+      summary: "Inactivar todos los accesos del usuario"
+      responses:
+        "200": { description: "All accesses inactivated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "404": { description: "User not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /user/password:
+    put:
+      tags: ["Users"]
+      summary: "Actualizar password"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/UserPasswordPut" }
+      responses:
+        "200": { description: "Password updated successfully", schema: { $ref: "#/definitions/ServerResponse" } }
+        "400": { description: "Missing/invalid fields", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "401": { description: "Invalid old password", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "User is not active", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "User not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    post:
+      tags: ["Users"]
+      summary: "Reset password (genera temporal)"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/UserPasswordPost" }
+      responses:
+        "200": { description: "Password reset initiated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "400": { description: "Bad Request", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "User not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /user/verification:
+    put:
+      tags: ["Users"]
+      summary: "Verificar usuario por código"
+      description: "Activa SOLO la app cuyo código coincida; limpia code y code_expiration."
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/UserVerificationRequest" }
+      responses:
+        "200": { description: "User successfully verified", schema: { $ref: "#/definitions/ServerResponse" } }
+        "401": { description: "Invalid/expired code", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "User not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  # ---------- Roles ----------
+  /rol:
+    get:
+      tags: ["Roles"]
+      summary: "Listar roles o obtener por nombre"
+      description: "Si se pasa ?name=... devuelve un array (0 o 1 elemento); si no, lista todos."
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          type: string
+          required: false
+          description: "Role name (opcional)"
+      responses:
+        "200":
+          description: "OK"
           schema:
-            $ref: "#/definitions/InvalidIdErrorResponse"
-        "500":
-          description: "Internal Server Error"
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: "#/definitions/RoleGet"
+              message:
+                type: string
+              message_code:
+                type: string
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+
+    post:
+      tags: ["Roles"]
+      summary: "Crear nuevo rol"
+      description: "Crea un rol para una app específica (app_id requerido)."
+      parameters:
+        - in: body
+          name: body
+          required: true
           schema:
-            $ref: "#/definitions/InternalErrorResponse"
+            type: object
+            required: [name, permissions, app_id]
+            properties:
+              name: { type: string, example: "Manager" }
+              description: { type: string, example: "Rol con permisos limitados" }
+              permissions:
+                type: array
+                items: { type: string }
+                example: ["read", "write", "update"]
+              app_id: { type: string, example: "507f1f77bcf86cd799439011" }
+              admin_id: { type: string, example: "507f1f77bcf86cd799439012" }
+      responses:
+        "201":
+          description: "Role created successfully"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Role created successfully" }
+              message_code: { type: string, example: "CREATED" }
+              status: { type: integer, example: 201 }
+        "400": { description: "Invalid request data", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "409": { description: "Role already exists in this application", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Validation errors", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Application not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+    delete:
+      tags: ["Roles"]
+      summary: "Eliminar rol por nombre"
+      description: "El backend recibe el nombre en el **body** y requiere Authorization Bearer."
+      parameters:
+        - in: header
+          name: Authorization
+          type: string
+          required: true
+          description: "Bearer <token>"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required: [role_name]
+            properties:
+              role_name: { type: string, example: "Manager" }
+      responses:
+        "200":
+          description: "Role deleted successfully"
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: "Role deleted successfully" }
+              message_code: { type: string, example: "ROLE_DELETED" }
+              status: { type: integer, example: 200 }
+        "401": { description: "Authorization required/invalid", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Invalid request data", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /rol/{id}:
+    parameters:
+      - in: path
+        name: id
+        type: string
+        required: true
+        description: "Role ID (MongoDB ObjectId)"
+        
+    get:
+      tags: ["Roles"]
+      summary: "Obtener rol por ID"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Role found"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Role retrieved successfully" }
+              message_code: { type: string, example: "ROLE_FOUND" }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to view this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    patch:
+      tags: ["Roles"]
+      summary: "Actualizar rol"
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name: { type: string, example: "Manager Updated" }
+              description: { type: string, example: "Rol de gerente actualizado" }
+              permissions:
+                type: array
+                items: { type: string }
+                example: ["read", "write", "update", "delete"]
+              is_active: { type: boolean, example: true }
+              screens:
+                type: array
+                items: { type: string }
+                example: ["dashboard", "users", "reports"]
+      responses:
+        "200":
+          description: "Role updated successfully"
+          schema:
+            type: object
+            properties:
+              data: { $ref: "#/definitions/RoleGet" }
+              message: { type: string, example: "Role updated successfully" }
+              message_code: { type: string, example: "ROLE_UPDATED" }
+        "400": { description: "No fields provided for update", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to modify this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Validation errors", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    delete:
+      tags: ["Roles"]
+      summary: "Eliminar rol por ID"
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: "Role deleted successfully"
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: "Role deleted successfully" }
+              message_code: { type: string, example: "ROLE_DELETED" }
+        "401": { description: "Authorization required", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "403": { description: "Unauthorized to delete this role", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "Role not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  # ---------- Admin ----------
+  /admin:
+    post:
+      tags: ["Admin"]
+      summary: "Crear admin"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/AdminPost" }
+      responses:
+        "201": { description: "admin created", schema: { $ref: "#/definitions/ServerResponse" } }
+        "409": { description: "admin_email already exists", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "422": { description: "Validation errors", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    get:
+      tags: ["Admin"]
+      summary: "Listar admins"
+      parameters:
+        - in: query
+          name: status
+          type: string
+          enum: ["active","inactive"]
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { $ref: "#/definitions/AdminGet" }
+              message: { type: string }
+              message_code: { type: string }
+        "400": { description: "Invalid status", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /admin/{id}:
+    parameters:
+      - in: path
+        name: id
+        type: string
+        required: true
+    get:
+      tags: ["Admin"]
+      summary: "Obtener admin"
+      responses:
+        "200": { description: "OK", schema: { $ref: "#/definitions/ServerResponse" } }
+        "404": { description: "admin not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    patch:
+      tags: ["Admin"]
+      summary: "Actualizar admin (status/password)"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              status: { type: string, enum: ["active","inactive"] }
+              password: { type: string, example: "NewSecret123*" }
+      responses:
+        "200": { description: "admin updated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "400": { description: "Invalid status / short password", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "admin not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    delete:
+      tags: ["Admin"]
+      summary: "Inactivar admin"
+      responses:
+        "200": { description: "admin inactivated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "404": { description: "admin not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  # ---------- Apps ----------
+  /apps:
+    post:
+      tags: ["Apps"]
+      summary: "Crear app"
+      description: "Crea una nueva aplicación y devuelve redirección sugerida a login de admin."
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema: { $ref: "#/definitions/AppPost" }
+      responses:
+        "201":
+          description: "app created - redirecting to admin login"
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  app: { $ref: "#/definitions/AppGet" }
+                  redirect_to:
+                    type: object
+                    properties:
+                      url: { type: string, example: "/auth/admin/login" }
+                      message: { type: string, example: "App created successfully. Please login as administrator to manage your application." }
+                      type: { type: string, example: "admin_login" }
+              message: { type: string, example: "App created successfully. Redirecting to admin login..." }
+              message_code: { type: string, example: "CREATED" }
+        "422": { description: "app name already exists / invalid input", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    get:
+      tags: ["Apps"]
+      summary: "Listar apps"
+      parameters:
+        - in: query
+          name: status
+          type: string
+          enum: ["active","inactive"]
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { $ref: "#/definitions/AppGet" }
+              message: { type: string }
+              message_code: { type: string }
+        "400": { description: "Invalid status", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
+  /apps/{id}:
+    parameters:
+      - in: path
+        name: id
+        type: string
+        required: true
+    get:
+      tags: ["Apps"]
+      summary: "Obtener app"
+      responses:
+        "200": { description: "OK", schema: { $ref: "#/definitions/ServerResponse" } }
+        "404": { description: "app not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    patch:
+      tags: ["Apps"]
+      summary: "Actualizar app (name/status/redirect_url)"
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name: { type: string, minLength: 2 }
+              status: { type: string, enum: ["active","inactive"] }
+              redirect_url: { type: string }
+      responses:
+        "200": { description: "app updated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "400": { description: "Missing fields", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "404": { description: "app not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+    delete:
+      tags: ["Apps"]
+      summary: "Inactivar app"
+      responses:
+        "200": { description: "app inactivated", schema: { $ref: "#/definitions/ServerResponse" } }
+        "404": { description: "app not found", schema: { $ref: "#/definitions/ErrorResponse" } }
+        "500": { description: "Internal Server Error", schema: { $ref: "#/definitions/InternalErrorResponse" } }
+
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"
