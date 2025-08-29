@@ -157,7 +157,7 @@ definitions:
       role: { type: string, example: "66df79..." }
       token: { type: string }
       code: { type: string, example: "138546" }
-      code_expiration: { type: string, example: "2025/06/28 16:35:00" }  # nombre actual en código
+      code_expliration: { type: string, example: "2025/06/28 16:35:00" }  # nombre actual en código
       status: { type: string, example: "Pending" }
       is_session_active: { type: boolean, example: false }
 
@@ -711,7 +711,7 @@ paths:
     put:
       tags: ["Users"]
       summary: "Verificar usuario por código"
-      description: "Activa SOLO la app cuyo código coincida; limpia code y code_expiration."
+      description: "Activa SOLO la app cuyo código coincida; limpia code y code_expliration."
       parameters:
         - in: body
           name: body
