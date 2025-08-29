@@ -106,7 +106,7 @@ class UserEnrollmentController(Resource):
                     "app":  app_oid,
                     "code": generate_verification_code(),
                     "token": "",
-                    "status": "pending",
+                    "status": "Pending",
                     "code_expiration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
                     "is_session_active": False
                 })
@@ -148,7 +148,7 @@ class UserEnrollmentController(Resource):
                     "app":  app_oid,
                     "code": str(random.randint(100000, 999999)),
                     "token": "",
-                    "status": "pending",
+                    "status": "Pending",
                     "code_expiration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
                     "is_session_active": False
                 })
@@ -296,7 +296,7 @@ class UserItemController(Resource):
         """
         Cambios dentro de apps[] (siempre requiere app_id):
         - {"app_id":"<id|name>", "is_session_active": true|false}
-        - {"app_id":"<id|name>", "status":"active|pending|inactive"}
+        - {"app_id":"<id|name>", "status":"Active|Pending|inactive"}
         - {"app_id":"<id|name>", "role":"<roleId|roleName>"}
         """
         try:
@@ -423,7 +423,7 @@ class UserPasswordController(Resource):
                 return ServerResponse(message="User not found", message_code=USER_NOT_FOUND, status=StatusCode.NOT_FOUND).to_response()
 
             # validar que tenga al menos una app activa
-            if not any((a.get('status') == 'active') for a in (user.get('apps') or [])):
+            if not any((a.get('status') == 'Active') for a in (user.get('apps') or [])):
                 return ServerResponse(message="User is not active", message_code=USER_NOT_ACTIVE, status=StatusCode.FORBIDDEN).to_response()
 
             if not UserModel.verify_password(old_password, user['password']):
@@ -517,7 +517,7 @@ class UserVerificationController(Resource):
                 return ServerResponse(message="Verification code expired", message_code=VERIFICATION_EXPIRED, status=StatusCode.UNAUTHORIZED).to_response()
 
             # activar SOLO esa app y limpiar el código
-            target['status'] = 'active'
+            target['status'] = 'Active'
             target['code'] = ''
             target['code_expiration'] = ''
 

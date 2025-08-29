@@ -157,7 +157,7 @@ class UserModel:
             # Intento con operador $[]
             res = __dbmanager__.update_by_condition(
                 {'email': email},
-                {'apps.$[].status': 'active', 'apps.$[].is_session_active': False}
+                {'apps.$[].status': 'Active', 'apps.$[].is_session_active': False}
             )
             if res is None or getattr(res, "matched_count", 0) == 0:
                 # Fallback manual
@@ -166,7 +166,7 @@ class UserModel:
                     return False
                 apps = doc.get('apps', []) or []
                 for a in apps:
-                    a['status'] = 'active'
+                    a['status'] = 'Active'
                     a['is_session_active'] = False
                 __dbmanager__.update_by_condition({'email': email}, {'apps': apps})
             return True
