@@ -128,7 +128,7 @@ definitions:
         properties:
           email: { type: string }
           name: { type: string }
-          status: { type: string, example: "Active" }
+          status: { type: string, example: "active" }
           role:
             $ref: "#/definitions/Role"
           token: { type: string, example: "eyJhbGciOi..." }
@@ -147,7 +147,7 @@ definitions:
       rolName: { type: string, example: "Admin" }
       email: { type: string, example: "user@est.utn.ac.cr" }
       name: { type: string, example: "Jane Doe" }
-      status: { type: string, example: "Active" }
+      status: { type: string, example: "active" }
 
   # ---------- Users ----------
   AppMembership:
@@ -158,7 +158,7 @@ definitions:
       token: { type: string }
       code: { type: string, example: "138546" }
       code_expiration: { type: string, example: "2025/06/28 16:35:00" }  # nombre actual en código
-      status: { type: string, example: "Pending" }
+      status: { type: string, example: "pending" }
       is_session_active: { type: boolean, example: false }
 
   User:
@@ -661,7 +661,7 @@ paths:
             required: [app_id]
             properties:
               app_id: { type: string, example: "vehiculos" }
-              status: { type: string, example: "Active" }
+              status: { type: string, example: "active" }
               role: { type: string, example: "admin" }
               is_session_active: { type: boolean, example: true }
       responses:
