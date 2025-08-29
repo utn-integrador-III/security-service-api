@@ -107,7 +107,7 @@ class UserEnrollmentController(Resource):
                     "code": generate_verification_code(),
                     "token": "",
                     "status": "Pending",
-                    "code_expliration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
+                    "code_expiration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
                     "is_session_active": False
                 })
 
@@ -149,7 +149,7 @@ class UserEnrollmentController(Resource):
                     "code": str(random.randint(100000, 999999)),
                     "token": "",
                     "status": "Pending",
-                    "code_expliration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
+                    "code_expiration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
                     "is_session_active": False
                 })
 
@@ -508,7 +508,7 @@ class UserVerificationController(Resource):
                 return ServerResponse(message="Invalid verification code", message_code=INVALID_VERIFICATION_CODE, status=StatusCode.UNAUTHORIZED).to_response()
 
             # validar expiración (YYYY/MM/DD HH:mm:SS)
-            exp_str = target.get('code_expliration')
+            exp_str = target.get('code_expiration')
             try:
                 exp_dt = datetime.strptime(exp_str, "%Y/%m/%d %H:%M:%S") if exp_str else None
             except Exception:
@@ -519,7 +519,7 @@ class UserVerificationController(Resource):
             # activar SOLO esa app y limpiar el código
             target['status'] = 'Active'
             target['code'] = ''
-            target['code_expliration'] = ''
+            target['code_expiration'] = ''
 
             # guardar cambios (sin tocar status en root)
             UserModel.update_user(email, {"apps": apps})
