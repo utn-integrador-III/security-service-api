@@ -86,12 +86,13 @@ class UserEnrollmentController(Resource):
                     ).to_response()
 
                 role_doc = RoleModel.get_by_name(role_name)
-                if not role_doc or not role_doc.get("_id"):
+                # FIXED: Changed from role_doc.get("_id") to hasattr(role_doc, '_id')
+                if not role_doc or not hasattr(role_doc, '_id') or not role_doc._id:
                     return ServerResponse(
                         message=f"Invalid role: {role_name}",
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     ).to_response()
-                role_oid = ObjectId(str(role_doc["_id"]))
+                role_oid = ObjectId(str(role_doc._id))
 
                 app_doc = get_app_by_name(app_name)
                 if not app_doc or not app_doc.get("_id"):
@@ -125,12 +126,13 @@ class UserEnrollmentController(Resource):
                     role_oid = ObjectId(role_val)
                 except Exception:
                     rdoc = RoleModel.get_by_name(role_val)
-                    if not rdoc or not rdoc.get("_id"):
+                    # FIXED: Changed from rdoc.get("_id") to hasattr(rdoc, '_id')
+                    if not rdoc or not hasattr(rdoc, '_id') or not rdoc._id:
                         return ServerResponse(
                             message=f"Invalid role: {role_val}",
                             status=StatusCode.UNPROCESSABLE_ENTITY
                         ).to_response()
-                    role_oid = ObjectId(str(rdoc["_id"]))
+                    role_oid = ObjectId(str(rdoc._id))
 
                 try:
                     app_oid = ObjectId(app_val)
@@ -329,12 +331,13 @@ class UserItemController(Resource):
                     role_oid = ObjectId(val)
                 except Exception:
                     rdoc = RoleModel.get_by_name(val)
-                    if not rdoc or not rdoc.get("_id"):
+                    # FIXED: Changed from rdoc.get("_id") to hasattr(rdoc, '_id')
+                    if not rdoc or not hasattr(rdoc, '_id') or not rdoc._id:
                         return ServerResponse(
                             message="Invalid role",
                             status=StatusCode.UNPROCESSABLE_ENTITY
                         ).to_response()
-                    role_oid = ObjectId(str(rdoc["_id"]))
+                    role_oid = ObjectId(str(rdoc._id))
                 updates["apps.$.role"] = role_oid
             if "is_session_active" in data:
                 updates["apps.$.is_session_active"] = bool(data["is_session_active"])
