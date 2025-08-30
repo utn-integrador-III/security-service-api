@@ -86,12 +86,13 @@ class UserEnrollmentController(Resource):
                     ).to_response()
 
                 role_doc = RoleModel.get_by_name(role_name)
-                if not role_doc or not role_doc.get("_id"):
+                # FIXED: Changed from role_doc.get("_id") to hasattr(role_doc, '_id')
+                if not role_doc or not hasattr(role_doc, '_id') or not role_doc._id:
                     return ServerResponse(
                         message=f"Invalid role: {role_name}",
                         status=StatusCode.UNPROCESSABLE_ENTITY
                     ).to_response()
-                role_oid = ObjectId(str(role_doc["_id"]))
+                role_oid = ObjectId(str(role_doc._id))
 
                 app_doc = get_app_by_name(app_name)
                 if not app_doc or not app_doc.get("_id"):
@@ -106,8 +107,8 @@ class UserEnrollmentController(Resource):
                     "app":  app_oid,
                     "code": generate_verification_code(),
                     "token": "",
-                    "status": "pending",
-                    "code_expiration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
+                    "status": "Pending",
+                    "code_expliration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
                     "is_session_active": False
                 })
 
@@ -125,12 +126,13 @@ class UserEnrollmentController(Resource):
                     role_oid = ObjectId(role_val)
                 except Exception:
                     rdoc = RoleModel.get_by_name(role_val)
-                    if not rdoc or not rdoc.get("_id"):
+                    # FIXED: Changed from rdoc.get("_id") to hasattr(rdoc, '_id')
+                    if not rdoc or not hasattr(rdoc, '_id') or not rdoc._id:
                         return ServerResponse(
                             message=f"Invalid role: {role_val}",
                             status=StatusCode.UNPROCESSABLE_ENTITY
                         ).to_response()
-                    role_oid = ObjectId(str(rdoc["_id"]))
+                    role_oid = ObjectId(str(rdoc._id))
 
                 try:
                     app_oid = ObjectId(app_val)
@@ -148,8 +150,8 @@ class UserEnrollmentController(Resource):
                     "app":  app_oid,
                     "code": str(random.randint(100000, 999999)),
                     "token": "",
-                    "status": "pending",
-                    "code_expiration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
+                    "status": "Pending",
+                    "code_expliration": (datetime.utcnow() + timedelta(minutes=5)).strftime("%Y/%m/%d %H:%M:%S"),
                     "is_session_active": False
                 })
 
@@ -296,7 +298,7 @@ class UserItemController(Resource):
         """
         Cambios dentro de apps[] (siempre requiere app_id):
         - {"app_id":"<id|name>", "is_session_active": true|false}
-        - {"app_id":"<id|name>", "status":"active|pending|inactive"}
+        - {"app_id":"<id|name>", "status":"Active|Pending|inactive"}
         - {"app_id":"<id|name>", "role":"<roleId|roleName>"}
         """
         try:
@@ -329,12 +331,13 @@ class UserItemController(Resource):
                     role_oid = ObjectId(val)
                 except Exception:
                     rdoc = RoleModel.get_by_name(val)
-                    if not rdoc or not rdoc.get("_id"):
+                    # FIXED: Changed from rdoc.get("_id") to hasattr(rdoc, '_id')
+                    if not rdoc or not hasattr(rdoc, '_id') or not rdoc._id:
                         return ServerResponse(
                             message="Invalid role",
                             status=StatusCode.UNPROCESSABLE_ENTITY
                         ).to_response()
-                    role_oid = ObjectId(str(rdoc["_id"]))
+                    role_oid = ObjectId(str(rdoc._id))
                 updates["apps.$.role"] = role_oid
             if "is_session_active" in data:
                 updates["apps.$.is_session_active"] = bool(data["is_session_active"])
@@ -423,7 +426,7 @@ class UserPasswordController(Resource):
                 return ServerResponse(message="User not found", message_code=USER_NOT_FOUND, status=StatusCode.NOT_FOUND).to_response()
 
             # validar que tenga al menos una app activa
-            if not any((a.get('status') == 'active') for a in (user.get('apps') or [])):
+            if not any((a.get('status') == 'Active') for a in (user.get('apps') or [])):
                 return ServerResponse(message="User is not active", message_code=USER_NOT_ACTIVE, status=StatusCode.FORBIDDEN).to_response()
 
             if not UserModel.verify_password(old_password, user['password']):
@@ -508,7 +511,7 @@ class UserVerificationController(Resource):
                 return ServerResponse(message="Invalid verification code", message_code=INVALID_VERIFICATION_CODE, status=StatusCode.UNAUTHORIZED).to_response()
 
             # validar expiración (YYYY/MM/DD HH:mm:SS)
-            exp_str = target.get('code_expiration')
+            exp_str = target.get('code_expliration')
             try:
                 exp_dt = datetime.strptime(exp_str, "%Y/%m/%d %H:%M:%S") if exp_str else None
             except Exception:
@@ -517,9 +520,9 @@ class UserVerificationController(Resource):
                 return ServerResponse(message="Verification code expired", message_code=VERIFICATION_EXPIRED, status=StatusCode.UNAUTHORIZED).to_response()
 
             # activar SOLO esa app y limpiar el código
-            target['status'] = 'active'
+            target['status'] = 'Active'
             target['code'] = ''
-            target['code_expiration'] = ''
+            target['code_expliration'] = ''
 
             # guardar cambios (sin tocar status en root)
             UserModel.update_user(email, {"apps": apps})

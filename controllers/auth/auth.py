@@ -54,7 +54,7 @@ class LoginController(Resource):
                     'name': security_user['name'],
                     'email': security_user['email'],
                     'password': security_user['password'],
-                    'status': security_user.get('status', 'active'),
+                    'status': security_user.get('status', 'Active'),
                     'apps': security_user.get('apps', []),
                     'token': security_user.get('token', ''),
                     'is_session_active': security_user.get('is_session_active', False)
@@ -84,7 +84,7 @@ class LoginController(Resource):
                 status=StatusCode.UNAUTHORIZED
             ).to_response()
 
-        if user['status'] != "active":
+        if user['status'] != "Active":
             return ServerResponse(
                 message="User is not active",
                 message_code="USER_NOT_ACTIVE",
